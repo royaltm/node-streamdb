@@ -2,7 +2,7 @@
   "name": "node-streamdb",
   "version": "0.0.1",
   "private": true,
-  "description": "log stream synchronizing in-memory document database",
+  "description": "log based in-memory document database",
   "main": "lib/index.js",
   "scripts": {
     "test": "tap -C -Rclassic test/test.*.js"
