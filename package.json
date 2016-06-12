@@ -2,10 +2,10 @@
   "name": "node-streamdb",
   "version": "0.0.1",
   "private": true,
-  "description": "",
+  "description": "log stream synchronizing in-memory document database",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tap -C -Rclassic test/test.*.js"
   },
   "author": "Rafał Michalski <royal@yeondir.com>",
   "license": "UNLICENSED",

@@ -154,6 +154,8 @@ stars.save(() => {
 // unique constraint violated: stars["575d7e9b26f27e31fcba7895"].name = Alrami
 ```
 
+We succesfully added "Arkab" but on the seconds "Alrami" constraint violation occured.
+
 ```js
 for(let star of stars.values()) console.log("%j", star);
 // {"bayer":"α Sagittarii","name":"Alrami","constellation":"575d813426f27e1bf035c45b"}
