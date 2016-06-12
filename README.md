@@ -103,7 +103,7 @@ doc_from2._id; // TypeError: Cannot perform 'get' on a proxy that has been revok
 
 For the simplicity of the setup for the below examples, let's assume that our example database will synchronize state with itself.
 
-Let's create schema to our constellations and create a relationship with stars.
+Let's create schema for our constellations and establish a relationship with stars.
 
 ```js
 var db = new DB({schema: {
@@ -130,13 +130,13 @@ db.stream.pipe(db.stream); // self updates only
 Now let's create a constellation with a single new star
 
 ```js
-var starid = stars.create({name: "Alrami", bayer: "α Sagittarii"});
+var alrami_id = stars.create({name: "Alrami", bayer: "α Sagittarii"});
 constellations.createAndSave({
   name: "Sagittarius",
   zodiac: "♐",
   location: {ra: 19, dec: -25},
   area: "867 sq. deg.",
-  stars: [starid]}).then(c=>console.log("%j", c));
+  stars: [alrami_id]}).then(c=>console.log("%j", c));
 ```
 
 In this instance the creation of Alrami and later Sagittarius will be an atomic operation.
@@ -158,6 +158,55 @@ We succesfully added "Arkab" but on the seconds "Alrami" constraint violation oc
 
 ```js
 for(let star of stars.values()) console.log("%j", star);
-// {"bayer":"α Sagittarii","name":"Alrami","constellation":"575d813426f27e1bf035c45b"}
-// {"bayer":"β Sagittarii","name":"Arkab","constellation":"575d813426f27e1bf035c45b"}
+// {"bayer":"α Sagittarii","name":"Alrami","constellation": ... ,"_id": ...}
+// {"bayer":"β Sagittarii","name":"Arkab","constellation": ... ,"_id": ...}
+```
+
+Because we have added our stars to a constellation, let's see how relationship works.
+
+```js
+var alrami = stars.name.get("Alrami");
+var arkab = stars.name.get("Arkab");
+// or stars[alrami_id]
+assert(alrami.constellation.name === "Sagittarius");
+assert(arkab.constellation.name === "Sagittarius");
+assert(sagitarius === alrami.constellation);
+assert(sagitarius === arkab.constellation);
+// and
+console.log("%j", sagitarius.stars);
+assert(sagitarius.stars.length === 2);
+assert(sagitarius.stars[0] === alrami);
+assert(sagitarius.stars[1] === arkab);
+```
+
+Let's break "Arkab" relationship with "Sagittarius".
+
+```js
+delete arkab.constellation;
+db.save().then(o => assert(o === arkab));
+```
+
+Now let's check relationship.
+
+```js
+assert(arkab.constellation === undefined);
+console.log("%j", sagitarius.stars);
+assert(sagitarius.stars.length === 1);
+assert(sagitarius.stars[0] === alrami);
+assert(sagitarius.stars[1] === undefined);
+```
+
+Ok, and now let's remove "Alrami".
+
+```js
+delete stars[alrami._id];
+// or stars.delete(alrami);
+db.save().then(c => assert(c === true));
+```
+
+Then...
+
+```js
+console.log("%j", sagitarius.stars);
+assert(sagitarius.stars.length === 0);
 ```
