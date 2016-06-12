@@ -8,8 +8,8 @@ Key features:
 - Document-oriented database
 - Data must fit in program memory
 - Duplex stream for publishing and receiving changes
-- Optional type enforce schema
-- Optional one-many, one-one and many-many relation schema with spcecial relation accessors
+- Optional type enforce schema, required properties, default values
+- Optional one-many, one-one and many-many relation schema with extra magic
 - Optional multi and unique indexes for model properties
 - Updates are propagated asynchronously via log stream
 
@@ -38,7 +38,7 @@ db1.stream.pipe(syncStream).pipe(db1.stream);
 db2.stream.pipe(syncStream).pipe(db2.stream);
 ```
 
-For a real-life example however one should consider applying a [consensus](https://en.wikipedia.org/wiki/Consensus_(computer_science)) algorithm to elect synchronizing master among concurrent servers.
+For a real-life example however one should consider applying a [consensus](https://en.wikipedia.org/wiki/Consensus_(computer_science)) algorithm to elect synchronizing master among concurrent servers. Or use some queue service like Kafka with single partition topic.
 
 Ok, now let's create some documents on db1.
 
