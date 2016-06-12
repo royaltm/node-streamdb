@@ -101,7 +101,7 @@ doc_from2._id; // TypeError: Cannot perform 'get' on a proxy that has been revok
 
 ### Schema
 
-For the simplicity of setup for the examples belowe assume that our example database will synchronize state with itself.
+For the simplicity of the setup for the below examples, let's assume that our example database will synchronize state with itself.
 
 Let's create schema to our constellations and create a relationship with stars.
 
