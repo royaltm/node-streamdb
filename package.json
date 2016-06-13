@@ -8,6 +8,10 @@
     "test": "tap -C -Rclassic test/test.*.js"
   },
   "author": "Rafał Michalski <royal@yeondir.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/royaltm/node-streamdb.git"
+  },
   "license": "UNLICENSED",
   "dependencies": {
   },
