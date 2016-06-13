@@ -86,8 +86,8 @@ test("DB", suite => {
 
     db.stream.pipe(db.stream);
 
-    setImmediate(() => {
-      db.collections.test.createAndSave({name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}})
+    return db.writable.then(db => {
+      return db.collections.test.createAndSave({name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}})
       .then(item => {
         t.type(item, Item)
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
@@ -134,9 +134,8 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item)
         t.deepEqual(item.toJSON(), {_id: item._id, name: undefined, time: undefined, other: {nested: {count: undefined, flag: undefined}}});
-      })
-      .catch(t.throws);
-    });
+      });
+    }).catch(t.throws);
   });
 
   suite.test("should create database with default constraint schema", t => {
@@ -153,9 +152,8 @@ test("DB", suite => {
     t.type(db, DB);
 
     db.stream.pipe(db.stream);
-
-    setImmediate(() => {
-      db.collections.test.createAndSave()
+    return db.writable.then(db => {
+      return db.collections.test.createAndSave()
       .then(item => {
         t.type(item, Item)
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
@@ -167,8 +165,8 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item)
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
-      }).catch(t.throws);
-    });
+      });
+    }).catch(t.throws);
   });
 
   suite.end();

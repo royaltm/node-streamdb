@@ -20,35 +20,43 @@ test("DB", suite => {
   });
 
   suite.test("should create loopback database", t => {
-    t.plan(6);
+    t.plan(9);
     var db = new DB();
 
     t.type(db, DB);
     t.type(db.stream, Duplex);
     t.strictEqual(db.stream.pipe(db.stream), db.stream);
-    setImmediate(() => {
+    t.strictEqual(db.stream.isReadableStreaming, false);
+    return db.writable.then(o => {
+      t.strictEqual(db.stream.isReadableStreaming, true);
+      t.strictEqual(o, db);
       var id = db.collections.test.create({foo: "bar", baz: 2, rabarbar: [1,2,3]});
       var promise = db.save();
       t.type(promise, Promise);
-      promise.then(item => {
+      return promise.then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {foo: "bar", baz: 2, rabarbar: [1,2,3], _id: id});
-      }).catch(t.threw);
-    });
+      })
+    }).catch(t.threw);
 
   });
 
   suite.test("should create one-way streaming database", t => {
-    t.plan(5);
+    t.plan(10);
     var dbMaster = new DB();
     var dbClient = new DB();
 
     var syncStream = new PassThrough({objectMode: true});
     dbMaster.stream.pipe(syncStream).pipe(dbClient.stream);
     syncStream.pipe(dbMaster.stream);
+    t.strictEqual(dbMaster.stream.isReadableStreaming, false);
+    t.strictEqual(dbClient.stream.isReadableStreaming, false);
 
-    setImmediate(() => {
-      dbMaster.collections.test.createAndSave({foo: "bar", baz: 2, rabarbar: [1,2,3]})
+    return dbMaster.writable.then(db => {
+      t.strictEqual(db, dbMaster);
+      t.strictEqual(dbMaster.stream.isReadableStreaming, true);
+      t.strictEqual(dbClient.stream.isReadableStreaming, false);
+      return dbMaster.collections.test.createAndSave({foo: "bar", baz: 2, rabarbar: [1,2,3]})
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {foo: "bar", baz: 2, rabarbar: [1,2,3], _id: item._id});
@@ -59,22 +67,28 @@ test("DB", suite => {
         dbClient.collections.test.create();
         t.throws(() => { dbClient.save() }, new Error("DBStream: please connect readable end to some destination before making updates"));
 
-      }).catch(t.threw);
-    });
+      });
+    }).catch(t.threw);
 
   });
 
   suite.test("should create two-way streaming database", t => {
-    t.plan(8);
+    t.plan(14);
     var dbMaster = new DB();
     var dbClient = new DB();
 
     var syncStream = new PassThrough({objectMode: true});
     dbMaster.stream.pipe(syncStream).pipe(dbMaster.stream);
     dbClient.stream.pipe(syncStream).pipe(dbClient.stream);
+    t.strictEqual(dbMaster.stream.isReadableStreaming, false);
+    t.strictEqual(dbClient.stream.isReadableStreaming, false);
 
-    setImmediate(() => {
-      dbMaster.collections.test.createAndSave({foo: "bar", baz: 2, rabarbar: [1,2,3]})
+    return Promise.all([dbMaster.writable, dbClient.writable]).then(dbs => {
+      t.strictEqual(dbs[0], dbMaster);
+      t.strictEqual(dbs[1], dbClient);
+      t.strictEqual(dbMaster.stream.isReadableStreaming, true);
+      t.strictEqual(dbClient.stream.isReadableStreaming, true);
+      return dbMaster.collections.test.createAndSave({foo: "bar", baz: 2, rabarbar: [1,2,3]})
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {foo: "bar", baz: 2, rabarbar: [1,2,3], _id: item._id});
