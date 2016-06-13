@@ -27,7 +27,7 @@ test("DB", suite => {
     t.type(db.stream, Duplex);
     t.strictEqual(db.stream.pipe(db.stream), db.stream);
     t.strictEqual(db.stream.isReadableStreaming, false);
-    return db.writable.then(o => {
+    db.writable.then(o => {
       t.strictEqual(db.stream.isReadableStreaming, true);
       t.strictEqual(o, db);
       var id = db.collections.test.create({foo: "bar", baz: 2, rabarbar: [1,2,3]});
@@ -52,7 +52,7 @@ test("DB", suite => {
     t.strictEqual(dbMaster.stream.isReadableStreaming, false);
     t.strictEqual(dbClient.stream.isReadableStreaming, false);
 
-    return dbMaster.writable.then(db => {
+    dbMaster.writable.then(db => {
       t.strictEqual(db, dbMaster);
       t.strictEqual(dbMaster.stream.isReadableStreaming, true);
       t.strictEqual(dbClient.stream.isReadableStreaming, false);
@@ -83,7 +83,7 @@ test("DB", suite => {
     t.strictEqual(dbMaster.stream.isReadableStreaming, false);
     t.strictEqual(dbClient.stream.isReadableStreaming, false);
 
-    return Promise.all([dbMaster.writable, dbClient.writable]).then(dbs => {
+    Promise.all([dbMaster.writable, dbClient.writable]).then(dbs => {
       t.strictEqual(dbs[0], dbMaster);
       t.strictEqual(dbs[1], dbClient);
       t.strictEqual(dbMaster.stream.isReadableStreaming, true);
