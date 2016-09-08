@@ -139,11 +139,12 @@ test("DB", suite => {
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(17);
+    t.plan(23);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
         enum: {type: "enum", enum: ["foo", "bar"]},
+        scal: { type: 'primitive', required: true},
         time: {type: "date", default: () => new Date(2016,6,12,20,42)},
         'other.nested.count': {type: "number", default: 10},
         'other.nested.flag': {type: "boolean", default: true}
@@ -161,8 +162,9 @@ test("DB", suite => {
 
     t.deepEqual(db.schema, {
       test: {
-        name: { type: 'string', default: 'foo' },
+        name: { type: 'string', default: 'foo', },
         enum: { type: 'enum', enum: ['foo', 'bar']},
+        scal: { type: 'primitive', required: true},
         time: { type: 'date', default: "() => new Date(2016,6,12,20,42)" },
         'other.nested.count': { type: 'number', default: 10 },
         'other.nested.flag': { type: 'boolean', default: true }
@@ -182,6 +184,12 @@ test("DB", suite => {
         "prop": "enum",
         "required": false,
         "type": {enums: {}}
+      },
+      "scal": {
+        "name": "scal",
+        "prop": "scal",
+        "required": true,
+        "type": {}
       },
       "other": {
         "nested": {
@@ -258,25 +266,39 @@ test("DB", suite => {
 
     db.stream.pipe(db.stream);
     return db.writable.then(db => {
-      return db.collections.test.createAndSave()
+      return db.collections.test.createAndSave({scal: null})
       .then(item => {
         t.type(item, Item)
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: null, time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: null, scal: null, time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
         delete item.name;
         delete item.time;
         delete item.other;
+        item.scal = 1;
+        item.other.nested.count = 42;
         return db.save();
       })
       .then(item => {
         t.type(item, Item)
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: null, time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: null, scal: 1, time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}});
         item.enum = "bar";
+        item.scal = "xxx";
+        item.other.nested.flag = false;
+        item.unschemed = "rarara";
+        t.throws(() => { item.other.nested.flag = null; }, new TypeError('other.nested.flag: property needs to be a boolean'));
         return db.save();
       })
       .then(item => {
         t.type(item, Item)
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: "bar", time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: "bar", scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: false}}, unschemed: "rarara"});
         t.throws(() => { item.enum = "baz"; }, new TypeError('enum: property needs to be one of: "foo","bar"'));
+        t.throws(() => { item.name = null; }, new TypeError('name: property needs to be a string'));
+        t.throws(() => { delete item.scal; }, new TypeError('scal: property is required'));
+        return db.collections.test.replaceAndSave(item._id, {scal: true, name: "baz", time: 0, enum: "foo"});
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'baz', enum: "foo", scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}});
+        t.throws(() => { db.collections.test.replace(item._id, {}); }, new TypeError('scal: property is required'));
       });
     }).catch(t.throws);
   });
