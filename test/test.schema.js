@@ -133,7 +133,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item)
-        t.deepEqual(item.toJSON(), {_id: item._id, name: undefined, time: undefined, other: {nested: {count: undefined, flag: undefined}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, time: undefined, other: {nested: {}}});
       });
     }).catch(t.throws);
   });
