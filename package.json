@@ -1,6 +1,6 @@
 {
   "name": "node-streamdb",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": true,
   "description": "log based in-memory document database",
   "main": "lib/index.js",
@@ -13,9 +13,8 @@
     "url": "git://github.com/royaltm/node-streamdb.git"
   },
   "license": "UNLICENSED",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
-    "tap": "^5.7.2"
+    "tap": "^5.8.0"
   }
 }
