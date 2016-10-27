@@ -1,6 +1,5 @@
 "use strict";
 
-const util = require('util');
 const test = require('tap').test;
 const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
