@@ -9,14 +9,17 @@ const { Duplex, PassThrough } = require('stream');
 test("DB", suite => {
 
   suite.test("should create read only database", t => {
+    t.plan(4);
     var db = new DB();
 
     t.type(db, DB);
     t.type(db.stream, Duplex);
 
     db.collections.test.create();
-    t.throws(() => { db.save() }, new Error("DBStream: please connect readable end to some destination before making updates"));
-    t.end();
+    var promise = db.save();
+    t.type(promise, Promise);
+    promise.then(() => t.ok(false));
+    setTimeout(() => t.ok(true), 100);
   });
 
   suite.test("should create loopback database", t => {
@@ -42,7 +45,7 @@ test("DB", suite => {
   });
 
   suite.test("should create one-way streaming database", t => {
-    t.plan(10);
+    t.plan(11);
     var dbMaster = new DB();
     var dbClient = new DB();
 
@@ -65,8 +68,10 @@ test("DB", suite => {
         t.deepEqual(itemCopy.toJSON(), item.toJSON());
 
         dbClient.collections.test.create();
-        t.throws(() => { dbClient.save() }, new Error("DBStream: please connect readable end to some destination before making updates"));
-
+        var promise = dbClient.save();
+        t.type(promise, Promise);
+        promise.then(() => t.ok(false));
+        setTimeout(() => t.ok(true), 100);
       });
     }).catch(t.threw);
 
