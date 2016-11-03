@@ -16,6 +16,8 @@ const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 const Collection = require('../lib/collection').Collection;
 
+const createExampleDb = require('../example/cellestial');
+
 console.log("----------------------------");
 console.log("node-streamdb REPL, welcome!");
 console.log("----------------------------");
@@ -31,40 +33,15 @@ createRepl().then(repl => {
   const ben = require('ben');
 
   function initializeContext(context) {
-
-    var db = new DB({schema: {
-      constellations: {
-        name: {type: String, unique: true, required: true},
-        'location.ra': Number,
-        'location.dec': Number,
-        zodiac: String,
-        createdAt: {type: Date, required: true, default: Date.now}
-      },
-      stars: {
-        name: {type: String, unique: true, required: true},
-        bayer: String,
-        constellation: {hasOne: {collection: 'constellations', hasMany: 'stars'}}
-      }
-    }});
-    db.stream.pipe(db.stream);
-    var constellations = db.collections.constellations;
-    var stars = db.collections.stars;
-    db.writable.then(o => {
-      var alrami_id = stars.create({name: "Alrami", bayer: "α Sagittarii"});
-      var sagitarius_id = constellations.create({
-        name: "Sagittarius",
-        zodiac: "♐",
-        location: {ra: 19, dec: -25},
-        area: "867 sq. deg.",
-        stars: [alrami_id]});
-      stars.create({name: "Arkab", bayer: "β Sagittarii", constellation: sagitarius_id});
-      stars.create({name: "Albaldah", bayer: "π Sagittarii", constellation: sagitarius_id});
-      return db.save();
-    }).then(() => {
+    createExampleDb().then(db => {
       console.log(colors.green('\nDatabase ready!'));
       repl.lineParser.reset();
       repl.bufferedCommand = '';
       repl.displayPrompt();
+
+      context.db = db;
+      context.constellations = db.collections.constellations;
+      context.stars = db.collections.stars;
     }).catch(err => console.warn(err.stack));
 
     Object.assign(context, {
@@ -75,9 +52,6 @@ createRepl().then(repl => {
     , DB
     , Item
     , Collection
-    , db
-    , constellations
-    , stars
     });
 
   }
