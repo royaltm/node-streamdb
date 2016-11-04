@@ -13,8 +13,9 @@ const { createRepl } = require('../repl');
 const msgpack = require('msgpack-lite');
 
 const DB = require('../lib');
-const Item = require('../lib/collection/item').Item;
-const Collection = require('../lib/collection').Collection;
+const { Item } = require('../lib/collection/item');
+const { Collection } = require('../lib/collection');
+const { iter, orderBy, range, times, Iterator, filterFunction } = require('../lib/iter');
 
 const createExampleDb = require('../example/cellestial');
 
@@ -42,6 +43,7 @@ createRepl().then(repl => {
       context.db = db;
       context.constellations = db.collections.constellations;
       context.stars = db.collections.stars;
+      context.c = db.collections;
     }).catch(err => console.warn(err.stack));
 
     Object.assign(context, {
@@ -52,6 +54,12 @@ createRepl().then(repl => {
     , DB
     , Item
     , Collection
+    , iter
+    , orderBy
+    , range
+    , times
+    , Iterator
+    , filterFunction
     });
 
   }
