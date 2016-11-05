@@ -130,6 +130,116 @@ test("DB", suite => {
 
   });
 
+  suite.test("autosave", t => {
+    t.plan(7 + 10*14 + 1);
+    var db = new DB()
+
+    t.type(db, DB);
+    t.type(db.stream, Duplex);
+    t.strictEqual(db.autosave, true);
+    t.strictEqual(db.stream.pipe(db.stream), db.stream);
+    t.strictEqual(db.stream.isReadableStreaming, false);
+    var check = 0, id;
+    db.on('update', args => {
+      t.type(args, Array);
+      t.strictEqual(args.length, 6);
+      t.type(args[0], 'string')
+      t.strictEqual(args[0].length, 24);
+      t.strictEqual(args[1], 'test');
+      t.strictEqual(args[2], '=');
+      t.type(args[3], 'string');
+      t.strictEqual(args[3].length, 24);
+      t.strictEqual(args[3], id);
+      t.notStrictEqual(args[3], args[0]);
+      t.strictEqual(args[4], '');
+      t.type(args[5], Object);
+      t.strictEqual(args[5].num, ++check);
+    });
+    db.writable.then(o => {
+      t.strictEqual(db.stream.isReadableStreaming, true);
+      t.strictEqual(o, db);
+      var num = 0;
+      const next = () => {
+        t.type(id = db.collections.test.create({num: ++num}), 'string');
+        if (num < 10) setImmediate(next);
+        else t.ok(true);
+      }
+      next();
+    }).catch(t.threw);
+
+  });
+
+  suite.test("no autosave", t => {
+    t.plan(10 + 13 + 9*2 + 4 + 9*9 + 4);
+    var db = new DB({autosave: false})
+
+    t.type(db, DB);
+    t.type(db.stream, Duplex);
+    t.strictEqual(db.autosave, false);
+    db.autosave = true;
+    t.strictEqual(db.stream.pipe(db.stream), db.stream);
+    t.strictEqual(db.stream.isReadableStreaming, false);
+    var check = 0, id, updateEvent = 0, ids = [];
+    db.once('update', args => {
+      ++updateEvent;
+      t.type(args, Array);
+      t.strictEqual(args.length, 6);
+      t.type(args[0], 'string')
+      t.strictEqual(args[0].length, 24);
+      t.strictEqual(args[1], 'test');
+      t.strictEqual(args[2], '=');
+      t.type(args[3], 'string');
+      t.strictEqual(args[3].length, 24);
+      t.strictEqual(args[3], id);
+      t.notStrictEqual(args[3], args[0]);
+      t.strictEqual(args[4], '');
+      t.type(args[5], Object);
+      t.strictEqual(args[5].num, ++check);
+      db.on('update', args => {
+        ++updateEvent;
+        t.type(args, Array);
+        t.strictEqual(args.length, 1+9*5);
+        t.type(args[0], 'string')
+        t.strictEqual(args[0].length, 24);
+        for(var i = 0, n = 0; i < args.length - 1; i+=5) {
+          t.strictEqual(args[i+1], 'test');
+          t.strictEqual(args[i+2], '=');
+          t.type(args[i+3], 'string');
+          t.strictEqual(args[i+3].length, 24);
+          t.strictEqual(args[i+3], ids[n++]);
+          t.notStrictEqual(args[i+3], args[0]);
+          t.strictEqual(args[i+4], '');
+          t.type(args[i+5], Object);
+          t.strictEqual(args[i+5].num, ++check);
+        }
+      });
+    });
+    db.writable.then(o => {
+      t.strictEqual(db.stream.isReadableStreaming, true);
+      t.strictEqual(o, db);
+      var num = 0;
+      const next = () => {
+        db.begin();
+        t.strictEqual(db.autosave, false);
+        t.type(id = db.collections.test.create({num: ++num}), 'string');
+        ids.push(id);
+        if (num < 10) return setImmediate(next);
+        var promise = db.save();
+        t.type(promise, Promise);
+        return promise.then(item => {
+          t.type(item, Item);
+          t.deepEqual(item.toJSON(), {num: check, _id: id});
+          t.strictEqual(updateEvent, 2);
+        })
+      }
+      t.type(id = db.collections.test.create({num: ++num}), 'string');
+      t.strictEqual(db.autosave, true);
+      db.begin();
+      t.strictEqual(db.autosave, false);
+      setImmediate(next);
+    }).catch(t.threw);
+
+  });
 
   suite.end();
 });
