@@ -4,6 +4,7 @@ const test = require('tap').test;
 const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 const Collection = require('../lib/collection').Collection;
+const Ident = require('../lib/id').Ident;
 
 test("DB", suite => {
 
@@ -66,7 +67,7 @@ test("DB", suite => {
       t.type(constellation, Item);
       var star = db.collections.stars.by.name.get('Alrami');
       t.type(star, Item);
-      t.deepEqual(JSON.parse(JSON.stringify(constellation.toJSON())), {_id: constellation._id, name: "Sagittarius",
+      t.deepEqual(JSON.parse(JSON.stringify(constellation)), {_id: constellation._id, name: "Sagittarius",
       createdAt: "1970-01-01T00:00:00.000Z",
       zodiac: "♐",
       location: {ra: 19, dec: -25},
@@ -76,7 +77,7 @@ test("DB", suite => {
       for(let [starid, star] of db.collections.stars) {
         t.strictEqual(star._id, starid);
       }
-      t.deepEqual(star.toJSON(), {_id: star._id, name: "Alrami", bayer: "α Sagittarii",
+      t.deepEqual(JSON.parse(JSON.stringify(star)), {_id: star._id, name: "Alrami", bayer: "α Sagittarii",
                   constellation: constellation._id});
       t.strictEqual(star.constellation, constellation);
       t.strictEqual(constellation.stars[0], star);

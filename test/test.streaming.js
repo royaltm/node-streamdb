@@ -3,6 +3,7 @@
 const test = require('tap').test;
 const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
+const Ident = require('../lib/id').Ident;
 
 const { Duplex, PassThrough } = require('stream');
 
@@ -37,7 +38,7 @@ test("DB", suite => {
       t.strictEqual(args[0].length, 24);
       t.strictEqual(args[1], 'test');
       t.strictEqual(args[2], '=');
-      t.type(args[3], 'string');
+      t.type(args[3], Ident);
       t.strictEqual(args[3].length, 24);
       t.notStrictEqual(args[3], args[0]);
       t.strictEqual(args[4], '');
@@ -147,9 +148,9 @@ test("DB", suite => {
       t.strictEqual(args[0].length, 24);
       t.strictEqual(args[1], 'test');
       t.strictEqual(args[2], '=');
-      t.type(args[3], 'string');
+      t.type(args[3], Ident);
       t.strictEqual(args[3].length, 24);
-      t.strictEqual(args[3], id);
+      t.strictEqual(args[3].toString(), id);
       t.notStrictEqual(args[3], args[0]);
       t.strictEqual(args[4], '');
       t.type(args[5], Object);
@@ -188,9 +189,9 @@ test("DB", suite => {
       t.strictEqual(args[0].length, 24);
       t.strictEqual(args[1], 'test');
       t.strictEqual(args[2], '=');
-      t.type(args[3], 'string');
+      t.type(args[3], Ident);
       t.strictEqual(args[3].length, 24);
-      t.strictEqual(args[3], id);
+      t.strictEqual(args[3].toString(), id);
       t.notStrictEqual(args[3], args[0]);
       t.strictEqual(args[4], '');
       t.type(args[5], Object);
@@ -204,9 +205,9 @@ test("DB", suite => {
         for(var i = 0, n = 0; i < args.length - 1; i+=5) {
           t.strictEqual(args[i+1], 'test');
           t.strictEqual(args[i+2], '=');
-          t.type(args[i+3], 'string');
+          t.type(args[i+3], Ident);
           t.strictEqual(args[i+3].length, 24);
-          t.strictEqual(args[i+3], ids[n++]);
+          t.strictEqual(args[i+3].toString(), ids[n++]);
           t.notStrictEqual(args[i+3], args[0]);
           t.strictEqual(args[i+4], '');
           t.type(args[i+5], Object);

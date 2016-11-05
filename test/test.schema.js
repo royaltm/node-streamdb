@@ -372,7 +372,7 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         fooid = item._id;
-        t.deepEqual(item.toJSON(), {_id: fooid, name: "meh", value: -50, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: fooid, name: "meh", value: -50, bar: barid});
         t.deepEqual(item.bar.toJSON(), {_id: barid, counter: 0});
         t.strictEqual(item.bar, db.collections.bars[barid]);
         return db.collections.foos.createAndSave({name: "woof!", bar: item.bar});
@@ -380,13 +380,13 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.notStrictEqual(item._id, fooid);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: "woof!", bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "woof!", bar: barid});
         t.deepEqual(item.bar.toJSON(), {_id: barid, counter: 0});
         var bar = db.collections.bars[barid];
         t.strictEqual(item.bar, bar);
         var foo = db.collections.foos[fooid];
-        t.deepEqual(foo.toJSON(), {_id: fooid, name: "meh", value: -50, bar: barid});
-        t.throws(() => { db.collections.bars.delete(foo) }, new TypeError('replace: item must be a Collection item or id string'));
+        t.deepEqual(JSON.parse(JSON.stringify(foo)), {_id: fooid, name: "meh", value: -50, bar: barid});
+        t.throws(() => { db.collections.bars.delete(foo) }, new TypeError('Ident: given constructor argument is not an ident'));
         return db.collections.bars.deleteAndSave(bar);
       })
       .then(check => {
@@ -406,14 +406,14 @@ test("DB", suite => {
         for(var item of db.collections.foos.values()) {
           t.type(item, Item);
           t.strictEqual(item.bar, bar);
-          t.strictEqual(item.toJSON().bar, barid);
+          t.strictEqual(item.toJSON().bar.toString(), barid);
         }
       });
     }).catch(t.throws);
   });
 
   suite.test("should create database with one to one relations", t => {
-    t.plan(78);
+    t.plan(82);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -486,8 +486,8 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: "blah", value: 50, bar: barid});
-        t.deepEqual(item.bar.toJSON(), {_id: barid, counter: 0, foo: item._id});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "blah", value: 50, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(item.bar)), {_id: barid, counter: 0, foo: item._id});
         t.strictEqual(item.bar, db.collections.bars[barid]);
         fooid = db.collections.foos.create({name: "meow", bar: item.bar});
         t.ok(isIdent(fooid));
@@ -499,34 +499,42 @@ test("DB", suite => {
         var bar = db.collections.bars[barid];
         fooid = bar.foo._id;
         t.ok(isIdent(fooid));
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foo: fooid});
-        t.deepEqual(bar.foo.toJSON(), {_id: fooid, name: "blah", value: 50, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foo: fooid});
+        t.deepEqual(JSON.parse(JSON.stringify(bar.foo)), {_id: fooid, name: "blah", value: 50, bar: barid});
         delete bar.foo.bar;
         return db.collections.foos.createAndSave({name: "meow", bar: bar});
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: "meow", bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "meow", bar: barid});
         var bar = db.collections.bars[barid];
         t.type(bar, Item);
         t.strictEqual(bar.foo, item);
         t.strictEqual(item.bar, bar);
-        var foo = db.collections.foos[fooid];
-        t.type(foo, Item);
-        t.notStrictEqual(foo, item);
-        t.strictEqual(foo.bar, undefined);
-        t.deepEqual(foo.toJSON(), {_id: fooid, name: "blah", value: 50});
-        bar.foo = foo;
-        return db.save();
+        bar.foo = item;
+        return db.save()
+        .then(bar => {
+          t.type(bar, Item);
+          t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foo: item._id});
+          t.strictEqual(bar.foo, item);
+          t.strictEqual(item.bar, bar);
+          var foo = db.collections.foos[fooid];
+          t.type(foo, Item);
+          t.notStrictEqual(foo, item);
+          t.strictEqual(foo.bar, undefined);
+          t.deepEqual(foo.toJSON(), {_id: fooid, name: "blah", value: 50});
+          bar.foo = foo;
+          return db.save();
+        });
       })
       .then(bar => {
         t.type(bar, Item);
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foo: fooid});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foo: fooid});
         var foo = db.collections.foos[fooid];
         t.type(foo, Item);
         t.strictEqual(bar.foo, foo);
         t.strictEqual(foo.bar, bar);
-        t.deepEqual(foo.toJSON(), {_id: fooid, name: "blah", value: 50, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(foo)), {_id: fooid, name: "blah", value: 50, bar: barid});
         for(var item of db.collections.foos.values()) {
           if (item !== foo) break;
         }
@@ -554,15 +562,15 @@ test("DB", suite => {
         t.type(foo, Item);
         var bar = db.collections.bars[barid];
         t.type(bar, Item);
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foo: fooid});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foo: fooid});
         t.strictEqual(bar.foo, foo);
         t.strictEqual(foo.bar, bar);
-        t.deepEqual(foo.toJSON(), {_id: fooid, name: "blah", value: 50, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(foo)), {_id: fooid, name: "blah", value: 50, bar: barid});
         for(var item of db.collections.foos.values()) {
           if (item !== foo) break;
         }
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: "meow"});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "meow"});
         t.notStrictEqual(item, foo);
         t.strictEqual(item.bar, undefined);
         return db.collections.foos.deleteAndSave(fooid);
@@ -576,17 +584,17 @@ test("DB", suite => {
         t.strictEqual(bar.foo, undefined);
         var item = db.collections.foos.values().next().value;
         t.deepEqual(item.toJSON(), {_id: item._id, name: "meow"});
-        t.throws(() => { db.collections.foos.replace(bar, {}) }, new TypeError('replace: item must be a Collection item or id string'));
+        t.throws(() => { db.collections.foos.replace(bar, {}) }, new TypeError('Ident: given constructor argument is not an ident'));
         db.collections.foos.replace(item, {name: "whoa!", bar: barid, value: null});
         return db.save();
       })
       .then(item => {
         t.type(item, Item);
         t.notStrictEqual(item._id, fooid);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: "whoa!", value: null, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "whoa!", value: null, bar: barid});
         var bar = db.collections.bars[barid];
         t.type(bar, Item);
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foo: item._id});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foo: item._id});
         t.strictEqual(bar.foo, item);
         t.strictEqual(item.bar, bar);
         db.collections.bars.delete(barid);
@@ -692,8 +700,8 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: "blah", value: 50, bar: barid});
-        t.deepEqual(item.bar.toJSON(), {_id: barid, counter: 0, foos: [item._id]});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "blah", value: 50, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(item.bar)), {_id: barid, counter: 0, foos: [item._id]});
         var bar = db.collections.bars[barid];
         t.type(bar, Item);
         t.strictEqual(item.bar, bar);
@@ -705,7 +713,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: "meow", bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "meow", bar: barid});
         var bar = db.collections.bars[barid];
         t.type(bar, Item);
         t.type(bar.foos, Array);
@@ -714,7 +722,7 @@ test("DB", suite => {
         t.type(bar.foos[1], Item);
         t.strictEqual(bar.foos[0], db.collections.foos[0])
         t.strictEqual(bar.foos[1], db.collections.foos[1])
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foos: Array.from(db.collections.foos.keys())});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foos: Array.from(db.collections.foos.keys())});
         t.strictEqual(db.collections.foos.size, 2);
         delete item.bar;
         return db.save();
@@ -733,8 +741,8 @@ test("DB", suite => {
         t.type(foo, Item);
         t.strictEqual(foo.bar, bar);
         t.strictEqual(bar.foos[0], foo)
-        t.deepEqual(foo.toJSON(), {_id: foo._id, name: "blah", value: 50, bar: barid});
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foos: [foo._id]});
+        t.deepEqual(JSON.parse(JSON.stringify(foo)), {_id: foo._id, name: "blah", value: 50, bar: barid});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foos: [foo._id]});
         delete bar.foos;
         return db.save();
       })
@@ -760,10 +768,10 @@ test("DB", suite => {
         t.type(bar.foos[1], Item);
         t.strictEqual(bar.foos[0], db.collections.foos[0])
         t.strictEqual(bar.foos[1], db.collections.foos[1])
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foos: Array.from(db.collections.foos.keys())});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foos: Array.from(db.collections.foos.keys())});
         for(var foo of db.collections.foos.values()) {
           t.type(foo, Item);
-          t.strictEqual(foo.toJSON().bar, barid);
+          t.strictEqual(foo.toJSON().bar.toString(), barid);
           t.strictEqual(foo.bar, bar);
         }
         fooid = db.collections.foos[0]._id;
@@ -778,10 +786,10 @@ test("DB", suite => {
         t.strictEqual(bar.foos.length, 1);
         t.type(bar.foos[0], Item);
         t.strictEqual(bar.foos[0], db.collections.foos[0])
-        t.deepEqual(bar.toJSON(), {_id: barid, counter: 0, foos: Array.from(db.collections.foos.keys())});
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foos: Array.from(db.collections.foos.keys())});
         for(var foo of db.collections.foos.values()) {
           t.type(foo, Item);
-          t.strictEqual(foo.toJSON().bar, barid);
+          t.strictEqual(foo.toJSON().bar.toString(), barid);
           t.strictEqual(foo.bar, bar);
         }
         t.strictEqual(db.collections.foos.size, 1);
