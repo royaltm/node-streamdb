@@ -23,13 +23,27 @@ test("DB", suite => {
   });
 
   suite.test("should create loopback database", t => {
-    t.plan(9);
-    var db = new DB();
+    t.plan(21);
+    var db = new DB(), updateEvent = false;
 
     t.type(db, DB);
     t.type(db.stream, Duplex);
     t.strictEqual(db.stream.pipe(db.stream), db.stream);
     t.strictEqual(db.stream.isReadableStreaming, false);
+    db.on('update', args => {
+      t.type(args, Array);
+      t.strictEqual(args.length, 6);
+      t.type(args[0], 'string')
+      t.strictEqual(args[0].length, 24);
+      t.strictEqual(args[1], 'test');
+      t.strictEqual(args[2], '=');
+      t.type(args[3], 'string');
+      t.strictEqual(args[3].length, 24);
+      t.notStrictEqual(args[3], args[0]);
+      t.strictEqual(args[4], '');
+      t.deepEqual(args[5], {foo: "bar", baz: 2, rabarbar: [1,2,3]});
+      updateEvent = true;
+    });
     db.writable.then(o => {
       t.strictEqual(db.stream.isReadableStreaming, true);
       t.strictEqual(o, db);
@@ -39,6 +53,7 @@ test("DB", suite => {
       return promise.then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {foo: "bar", baz: 2, rabarbar: [1,2,3], _id: id});
+        t.strictEqual(updateEvent, true);
       })
     }).catch(t.threw);
 
