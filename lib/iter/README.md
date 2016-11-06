@@ -17,6 +17,7 @@ or `[...iter]` or call one of the execution methods which performs additional ta
 
 - `each(callback)`
    calls `callback(item, index, iterator)` and yields each item
+   handy for "side effects"
 
 - `entries()`
   yields `[index, item]`
@@ -79,8 +80,8 @@ Execution methods:
 - `all()`
   converts iterator to an Array a sugar for `Array.from(iter)`
 
-- `toArray()`
-  another sugar for `Array.from(iter)`
+- `count()`
+  counts items in an iterator returning a number of items
 
 - `find(filter)`
   a sugar for `grep(filter).first()`
@@ -98,8 +99,10 @@ Execution methods:
   iterates over items invoking `callback(item, index, iterator)`;
   returns `undefined`
 
-- `count()`
-  counts items in an iterator returning a number of items
+- `partition(partitioner)`
+  invokes `partitioner(item, index, iterator)` and partitions items into
+  two arrays: truthy and falsy depending on values returned by the partitioner
+  returns `[truthy, falsy]` arrays as a two item Array
 
 - `run([n])`
   only executes an iterator returning nothing (`undefined`);
@@ -122,10 +125,8 @@ Execution methods:
   or an array of tuples `[field, direction]`
   specify `direction` as "desc" or -1 for descendant order
 
-- `partition(partitioner)`
-  invokes `partitioner(item, index, iterator)` and partitions items into
-  two arrays: truthy and falsy depending on values returned by the partitioner
-  returns `[truthy, falsy]` arrays as a two item Array
+- `toArray()`
+  another sugar for `Array.from(iter)`
 
 - `top(n)`
   collects iterator items at most `n` times, returns an Array;
