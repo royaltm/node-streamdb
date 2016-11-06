@@ -79,7 +79,7 @@ or `[...iter]` or call one of the execution methods which performs additional ta
   zips current iterator with argument iterators and invokes mapper with elements
   from each iterator as arguments; yields mapper results;
   if mapper is not provided yields elements from iterators as arrays;
-  ends when any of the iterators are done
+  ends when any of the iterators is done
 
 Execution methods:
 
