@@ -1,106 +1,133 @@
 Iterator
 ========
 
-To create an iterator call iter(arrayLikeOrIterator).
+Iterator is a wrapper class over actual iterator to provide some convenient utilities.
+
+To create an iterator call `iter(arrayLikeOrIteratorOrIterable)`.
 
 ```
 const iter = require('iter')
 iter([1,2,3]).grep(x => x % 2 === 1).all();
 ```
 
+Lazy iterator methods return Iterator instances for chaining.
 
-Lazy iterator methods returns Iterator instances for chaining.
-To get the actual results iterate with `for(.. of iter)` or convert to array with Array.from(iter)
-or [...iter] or call one of the execution methods which performs additional tasks on the iterator.
+To get the actual results iterate with `for(.. of iter)` or convert to array with `Array.from(iter)`
+or `[...iter]` or call one of the execution methods which performs additional tasks.
 
-each(callback)        : calls `callback(item, index, iterator)` and yields each item
+- `each(callback)`
+   calls `callback(item, index, iterator)` and yields each item
 
-entries()             : yields [index, item]
+- `entries()`
+  yields `[index, item]`
 
-dedup([field|mapper}) : yields non-duplicate items (items must be sorted for complete uniqueness)
-                        `field` may be specified in this instance items are yielded whose field
-                        values are non-duplicate 
-                        `mapper(item, index, iterator)` may be specified in this instance items
-                        are yielded for which returned values from a mapper are non-duplicate
-drop(n)               : yields items skipping `n` from the beginning
+- `dedup([field|mapper})`
+  yields non-duplicate items (items must be sorted for complete uniqueness)
+  `field` may be specified in this instance items are yielded whose field
+  values are non-duplicate 
+  `mapper(item, index, iterator)` may be specified in this instance items
+  are yielded for which returned values from a mapper are non-duplicate
 
-flatmap([mapper],[maxdepth])
-                      : yields returned values from a `mapper(item, index0, index1, ...indexN)` 
-                        recursively applying mapper to items which are arrays or iterators
-                        when mapper may is omited flatmap yields all items recursively
+- `drop(n)`
+  yields items skipping `n` from the beginning
 
-grep(filters)         : yields only items for which filter returns truish value
-                        `filters` may be a function(item, index, iterator) or a filter descriptor
-                        see below in filters
+- `flatmap([mapper],[maxdepth])`
+  yields returned values from a `mapper(item, index0, index1, ...indexN)` 
+  recursively applying mapper to items which are arrays or iterators
+  when mapper may is omited flatmap yields all items recursively
 
-head()                : a sugar for take(1)
+- `grep(filters)`
+  yields only items for which filter returns truish value.
+  `filters` may be a function(item, index, iterator) or a filter descriptor.
+  See below for more on filters
 
-map(mapper)           : yields returned values from a `mapper(item, index, iterator)`
+- `head()`
+  a sugar for `take(1)`
 
-pluck(field)          : yields extracted items' fields
+- `map(mapper)`
+  yields returned values from a `mapper(item, index, iterator)`
 
-slices(size)          : yields items as array slices of a given maximum size
+- `pluck(field)`
+  yields extracted items' fields
 
-sorted(comparator)    : sorts items with a `comparator(a, b) => -1|0|1` and returns iterator
+- `slices(size)`
+  yields items as array slices of a given maximum size
 
-sortedBy(fields[, direction]) : sorts items by `fields` and `direction` order and returns iterator
-                                `fields` may be a single field name or an array of field names
-                                or an array of tuples `[field, direction]`
-                              specify `direction` as "desc" or -1 for descendant order
+- `sorted(comparator)`
+  sorts items with a `comparator(a, b) => -1|0|1` and returns iterator
 
-tail()                : a sugar for drop(1)
+- `sortedBy(fields[, direction])`
+  sorts items by `fields` and `direction` order and returns iterator
+  `fields` may be a single field name or an array of field names
+  or an array of tuples `[field, direction]`
+  specify `direction` as `"desc"` or `-1` for descendant order
 
-take(n)               : yields at most `n` items skipping the rest
+- `tail()`
+  a sugar for drop(1)
 
-unique(field)         : yields unique items
-                        `field` may be specified in this instance items are yielded whose field
-                        values are unique
-                        `mapper(item, index, iterator)` may be specified in this instance items
-                        are yielded for which returned values from a mapper are unique
+- `take(n)`
+  yields at most `n` items skipping the rest
+
+- `unique(field)`
+  yields unique items; `field` may be specified in this instance items are
+  yielded whose field values are unique;
+  `mapper(item, index, iterator)` may be specified in this instance items
+  are yielded for which returned values from a mapper are unique
 
 Execution methods:
 
-all()                       : converts iterator to an Array a sugar for `Array.from(iter)`
+- `all()`
+  converts iterator to an Array a sugar for `Array.from(iter)`
 
-toArray()                   : another sugar for `Array.from(iter)`
+- `toArray()`
+  another sugar for `Array.from(iter)`
 
-find(filter)                : a sugar for `grep(filter).first()`
+- `find(filter)`
+  a sugar for `grep(filter).first()`
 
-first()                     : returns first iterator item or iter.done Symbol
+- `first()`
+  returns first iterator item or iter.done Symbol
 
-fetch()                     : fetches next item from the iterator
-                              can be called again on the same iterator
-                              returns iter.done Symbol when there are no more entries
+- `fetch()`
+  fetches next item from the iterator
+  can be called again on the same iterator
+  returns iter.done Symbol when there are no more entries
 
-forEach(callback)           : iterates over items invoking `callback(item, index, iterator)`
-                              returns `undefined`
+- `forEach(callback)`
+  iterates over items invoking `callback(item, index, iterator)`; returns `undefined`
 
-count()                     : counts items in an iterator returning a number of items
+- `count()`
+  counts items in an iterator returning a number of items
 
-run([n])                    : executes an iterator returning nothing (`undefined`)
-                              if `n` is specified executes at most `n` times
-                              can be called again on the same iterator
+- `run([n])`
+  executes an iterator returning nothing (`undefined`);
+  if `n` is specified executes at most `n` times;
+  can be called again on the same iterator
 
-reduce(reductor[, value])   : reduces items to a single value invoking
-                              `reductor(value, item, index, iterator)`
-                              for each item and replacing value with result of the reductor
-                              returns the last value
-                              if value is not specified it becomes the first item of the iterator and the reductor is
-                              invoked starting from the next item
+- `reduce(reductor[, value])`
+  reduces items to a single value invoking
+  `reductor(value, item, index, iterator)`
+  for each item and replacing value with result of the reductor
+  returns the last value if value is not specified it becomes the first item
+  of the iterator and the reductor is invoked starting from the next item
 
-sort(comparator)            : sorts items with a `comparator(a, b) => -1|0|1` and returns sorted Array
+- `sort(comparator)`
+  sorts items with a `comparator(a, b) => -1|0|1` and returns sorted Array
 
-sortBy(fields[, direction]) : sorts items by `fields` and `direction` order and returns sorted Array
-                              `fields` may be a single field name or an array of field names
-                              or an array of tuples `[field, direction]`
-                              specify `direction` as "desc" or -1 for descendant order
+- `sortBy(fields[, direction])`
+  sorts items by `fields` and `direction` order and returns sorted Array
+  `fields` may be a single field name or an array of field names
+  or an array of tuples `[field, direction]`
+  specify `direction` as "desc" or -1 for descendant order
 
-partition(partitioner)      : invokes `partitioner(item, index, iterator)` and partitions items into
-                              two arrays: truthy and falsy depending on values returned by the partitioner
-                              returns [truthy, falsy] arrays as a two item Array
+- `partition(partitioner)`
+  invokes `partitioner(item, index, iterator)` and partitions items into
+  two arrays: truthy and falsy depending on values returned by the partitioner
+  returns [truthy, falsy] arrays as a two item Array
 
-top(n)                      : collects iterator items at most `n` times, returns an Array
-                              can be called again on the same iterator
+- `top(n)`
+  collects iterator items at most `n` times, returns an Array;
+  can be called again on the same iterator
 
 
 Filters
