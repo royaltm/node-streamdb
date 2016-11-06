@@ -48,7 +48,7 @@ or `[...iter]` or call one of the execution methods which performs additional ta
   yields returned values from a `mapper(item, index, iterator)`
 
 - `pluck(field)`
-  yields extracted items' fields
+  yields field extracted from each object item
 
 - `slices(size)`
   yields items as array slices of a given maximum size
@@ -86,23 +86,25 @@ Execution methods:
   a sugar for `grep(filter).first()`
 
 - `first()`
-  returns first iterator item or iter.done Symbol
+  returns first item from an iterator or `iter.done` when there are no entries
+  destroys iterators based on generators
 
 - `fetch()`
   fetches next item from the iterator
-  can be called again on the same iterator
-  returns iter.done Symbol when there are no more entries
+  can be safely called again on the same iterator
+  returns `iter.done` when there are no more entries
 
 - `forEach(callback)`
-  iterates over items invoking `callback(item, index, iterator)`; returns `undefined`
+  iterates over items invoking `callback(item, index, iterator)`;
+  returns `undefined`
 
 - `count()`
   counts items in an iterator returning a number of items
 
 - `run([n])`
-  executes an iterator returning nothing (`undefined`);
+  only executes an iterator returning nothing (`undefined`);
   if `n` is specified executes at most `n` times;
-  can be called again on the same iterator
+  can be safely called again on the same iterator
 
 - `reduce(reductor[, value])`
   reduces items to a single value invoking
@@ -123,7 +125,7 @@ Execution methods:
 - `partition(partitioner)`
   invokes `partitioner(item, index, iterator)` and partitions items into
   two arrays: truthy and falsy depending on values returned by the partitioner
-  returns [truthy, falsy] arrays as a two item Array
+  returns `[truthy, falsy]` arrays as a two item Array
 
 - `top(n)`
   collects iterator items at most `n` times, returns an Array;
@@ -144,11 +146,11 @@ The `filters` argument describes a condition, it may be one of:
 - a regexp
 - a Set (matches any value in a set)
 - an Array
-  in this instance array constitutes a logical sum of its condition elements (or, ||)
+  in this instance array constitutes a logical sum of its condition elements (or, `||`)
 - an Object
-  in this instance expected value must be an object
+  in this instance expected value must be an object;
   if properties are defined on a condition object their values constitute a conjunction
-  of conditions matched against target properties (and, &&)
+  of conditions matched against target properties (and, `&&`)
 
 
 e.g.:
@@ -195,12 +197,12 @@ matches e.g.:
 - `{organization: {name: "acme", owner: {name: "Fred", age: 42, ...}, ...}, ...}`
 
 
- `grep(["foo", /bar/, {name: /Stefan/i, address: {city: ['Melbourne','Warsaw']}}])`
+`grep(["foo", /bar/, {name: /Stefan/i, address: {city: ['Melbourne','Warsaw']}}])`
 
- will match any of the following:
+will match any of the following:
 
- - `"foo"`
- - `"rabarbar"`
- - `{name: "just some stefan", {city: "Melbourne"}}`
- - `{name: "Stefan Batory", {city: "Warsaw"}}`
+- `"foo"`
+- `"rabarbar"`
+- `{name: "just some stefan", {city: "Melbourne"}}`
+- `{name: "Stefan Batory", {city: "Warsaw"}}`
 
