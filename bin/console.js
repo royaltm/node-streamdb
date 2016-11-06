@@ -15,8 +15,7 @@ const msgpack = require('msgpack-lite');
 const DB = require('../lib');
 const { Item } = require('../lib/collection/item');
 const { Collection } = require('../lib/collection');
-const { iter, orderBy, range, times, Iterator, filterFunction } = require('../lib/iter');
-
+const { iter, orderBy, range, times, Iterator, createFilterFn } = require('../lib/iter');
 const createExampleDb = require('../example/cellestial');
 
 console.log("----------------------------");
@@ -59,7 +58,7 @@ createRepl().then(repl => {
     , range
     , times
     , Iterator
-    , filterFunction
+    , createFilterFn
     });
 
   }
