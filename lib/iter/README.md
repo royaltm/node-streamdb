@@ -75,6 +75,12 @@ or `[...iter]` or call one of the execution methods which performs additional ta
   `mapper(item, index, iterator)` may be specified in this instance items
   are yielded for which returned values from a mapper are unique
 
+- `zip(it1, it2, ...itN[, mapper])`
+  zips current iterator with argument iterators and invokes mapper with elements
+  from each iterator as arguments; yields mapper results;
+  if mapper is not provided yields elements from iterators as arrays;
+  ends when any of the iterators are done
+
 Execution methods:
 
 - `all()`
