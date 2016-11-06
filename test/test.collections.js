@@ -73,7 +73,7 @@ test("DB", suite => {
       location: {ra: 19, dec: -25},
       area: "867 sq. deg.",
       stars: [star._id]});
-      t.deepEqual(constellation.stars, Array.from(db.collections.stars.values()));
+      t.deepEqual(constellation.stars.slice(), Array.from(db.collections.stars.values()));
       for(let [starid, star] of db.collections.stars) {
         t.strictEqual(star._id, starid);
       }
