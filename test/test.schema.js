@@ -10,6 +10,8 @@ const $itemKlass = require('../lib/collection/schema').itemKlassSym;
 const isIdent = require('../lib/id').isIdent;
 const Multi = require('../lib/collection/multi');
 
+const { SchemaSyntaxError, UniqueConstraintViolationError } = require('../lib/errors');
+
 test("DB", suite => {
 
   suite.test("should create database with type constraint schema", t => {
@@ -494,7 +496,7 @@ test("DB", suite => {
         return db.save();
       })
       .catch(err => {
-        t.type(err, Error);
+        t.type(err, UniqueConstraintViolationError);
         t.strictEqual(err.message, `unique constraint violated: foos["${fooid}"].bar = ${barid}`);
         var bar = db.collections.bars[barid];
         fooid = bar.foo._id;
