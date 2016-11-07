@@ -15,12 +15,8 @@ Lazy iterator methods return Iterator instances for chaining.
 To get the actual results iterate with `for(.. of iter)` or convert to array with `Array.from(iter)`
 or `[...iter]` or call one of the execution methods which performs additional tasks.
 
-- `each(callback)`
-   calls `callback(item, index, iterator)` and yields each item
-   handy for "side effects"
-
-- `entries()`
-  yields `[index, item]`
+- `concat(it1, it2, ...itN)`
+   concatenates current iterator with iterators in arguments
 
 - `dedup([field|mapper})`
   yields non-duplicate items (items must be sorted for complete uniqueness)
@@ -31,6 +27,13 @@ or `[...iter]` or call one of the execution methods which performs additional ta
 
 - `drop(n)`
   yields items skipping `n` from the beginning
+
+- `each(callback)`
+   calls `callback(item, index, iterator)` and yields each item
+   handy for "side effects"
+
+- `entries()`
+  yields `[index, item]`
 
 - `flatmap([mapper],[maxdepth])`
   yields returned values from a `mapper(item, index0, index1, ...indexN)` 
@@ -76,7 +79,7 @@ or `[...iter]` or call one of the execution methods which performs additional ta
   are yielded for which returned values from a mapper are unique
 
 - `zip(it1, it2, ...itN[, mapper])`
-  zips current iterator with argument iterators and invokes mapper with elements
+  zips current iterator iterators in arguments and invokes mapper with elements
   from each iterator as arguments; yields mapper results;
   if mapper is not provided yields elements from iterators as arrays;
   ends when any of the iterators is done
