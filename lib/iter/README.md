@@ -134,12 +134,19 @@ Execution methods:
   or an array of tuples `[field, direction]`
   specify `direction` as "desc" or -1 for descendant order
 
-- `toArray()`
-  another sugar for `Array.from(iter)`
-
 - `top(n)`
   collects iterator items at most `n` times, returns an Array;
   can be called again on the same iterator
+
+- `toArray()`
+  another sugar for `Array.from(iter)`
+
+- `toMap()`
+  a sugar for `new Map(iter)` (need array tuples as elements)
+  if not you may try e.g. `iter.entries().toMap()`
+
+- `toSet()`
+  a sugar for `new Sap(iter)`
 
 
 Filters
