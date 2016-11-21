@@ -92,6 +92,9 @@ Execution methods:
 - `count()`
   counts items in an iterator returning a number of items
 
+- `every([callback])`
+  returns `true` if every `callback(item, index, iterator)` returns truish otherwise returns `false`
+
 - `find(filter)`
   a sugar for `grep(filter).first()`
 
@@ -124,6 +127,9 @@ Execution methods:
   for each item and replacing value with result of the reductor
   returns the last value if value is not specified it becomes the first item
   of the iterator and the reductor is invoked starting from the next item
+
+- `some([callback])`
+  returns `true` if any `callback(item, index, iterator)` returns truish otherwise returns `false`
 
 - `sort(comparator)`
   sorts items with a `comparator(a, b) => -1|0|1` and returns sorted Array
