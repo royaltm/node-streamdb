@@ -45,10 +45,8 @@ test("DB", suite => {
       t.type(collection.by, 'object');
     }
     t.deepEqual(Object.keys(db.collections.constellations.by), ['name']);
-    t.strictEqual(db.collections.constellations.by.name, db.collections.constellations.name);
     t.strictEqual(db.collections.constellations.by.name.size, 0);
     t.deepEqual(Object.keys(db.collections.stars.by), ['name']);
-    t.strictEqual(db.collections.stars.by.name, db.collections.stars.name);
     t.strictEqual(db.collections.stars.by.name.size, 0);
 
     db.stream.pipe(db.stream);
@@ -81,12 +79,12 @@ test("DB", suite => {
                   constellation: constellation._id});
       t.strictEqual(star.constellation, constellation);
       t.strictEqual(constellation.stars[0], star);
-      t.strictEqual(db.collections.stars.name.get('Alrami'), star);
-      t.strictEqual(db.collections.stars.name.size, 1);
-      t.strictEqual(db.collections.stars.name.has('Alrami'), true);
-      t.strictEqual(db.collections.constellations.name.get('Sagittarius'), constellation);
-      t.strictEqual(db.collections.constellations.name.size, 1);
-      t.strictEqual(db.collections.constellations.name.has('Sagittarius'), true);
+      t.strictEqual(db.collections.stars.by.name.get('Alrami'), star);
+      t.strictEqual(db.collections.stars.by.name.size, 1);
+      t.strictEqual(db.collections.stars.by.name.has('Alrami'), true);
+      t.strictEqual(db.collections.constellations.by.name.get('Sagittarius'), constellation);
+      t.strictEqual(db.collections.constellations.by.name.size, 1);
+      t.strictEqual(db.collections.constellations.by.name.has('Sagittarius'), true);
       t.end();
     });
 

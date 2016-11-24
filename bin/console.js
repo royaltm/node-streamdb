@@ -16,7 +16,7 @@ const DB = require('../lib');
 const { Item } = require('../lib/collection/item');
 const { Collection } = require('../lib/collection');
 const { iter, orderBy, range, times, Iterator, createFilterFn } = require('../lib/iter');
-const createExampleDb = require('../example/cellestial');
+const createExampleDb = require(`../example/${process.argv[2] || 'cellestial'}`);
 
 console.log("----------------------------");
 console.log("node-streamdb REPL, welcome!");
@@ -39,10 +39,17 @@ createRepl().then(repl => {
       repl.bufferedCommand = '';
       repl.displayPrompt();
 
-      context.db = db;
-      context.constellations = db.collections.constellations;
-      context.stars = db.collections.stars;
-      context.c = db.collections;
+      // repl.writer = function(output) {
+        
+      // };
+
+      context.database = db;
+
+      context.db = {};
+
+      for(let name in db.collections) {
+        context.db[name] = db.collection(name);
+      }
     }).catch(err => console.warn(err.stack));
 
     Object.assign(context, {

@@ -197,6 +197,37 @@ test("isNumber", function(t) {
   t.end();
 });
 
+test("isMap", function(t) {
+  t.strictEqual(util.isMap({}),                              false);
+  t.strictEqual(util.isMap([]),                              false);
+  t.strictEqual(util.isMap(new Date),                        false);
+  t.strictEqual(util.isMap(/regexp/),                        false);
+  t.strictEqual(util.isMap(new String('asd')),               false);
+  t.strictEqual(util.isMap(new Number(42)),                  false);
+  t.strictEqual(util.isMap(new Boolean(false)),              false);
+  t.strictEqual(util.isMap(new Dummy()),                     false);
+  t.strictEqual(util.isMap(new Map()),                       true);
+  t.strictEqual(util.isMap(new Set()),                       false);
+  t.strictEqual(util.isMap(Object.create(null)),             false);
+  t.strictEqual(util.isMap(Object.create(Array.prototype)),  false);
+  t.strictEqual(util.isMap(Object.create(RegExp.prototype)), false);
+  t.strictEqual(util.isMap(Object.create(Date.prototype)),   false);
+  t.strictEqual(util.isMap(Object.create(RegExp.prototype)), false);
+  t.strictEqual(util.isMap(Object.create(Dummy.prototype)),  false);
+  t.strictEqual(util.isMap(),                                false);
+  t.strictEqual(util.isMap(null),                            false);
+  t.strictEqual(util.isMap(undefined),                       false);
+  t.strictEqual(util.isMap(false),                           false);
+  t.strictEqual(util.isMap(true),                            false);
+  t.strictEqual(util.isMap(0),                               false);
+  t.strictEqual(util.isMap(42),                              false);
+  t.strictEqual(util.isMap(''),                              false);
+  t.strictEqual(util.isMap('foo'),                           false);
+  t.strictEqual(util.isMap(function(){}),                    false);
+  t.strictEqual(util.isMap(Symbol("foo")),                   false);
+  t.end();
+});
+
 test("isObject", function(t) {
   t.strictEqual(util.isObject({}),                              true);
   t.strictEqual(util.isObject([]),                              true);
@@ -205,6 +236,8 @@ test("isObject", function(t) {
   t.strictEqual(util.isObject(new String('asd')),               true);
   t.strictEqual(util.isObject(new Number(42)),                  true);
   t.strictEqual(util.isObject(new Boolean(true)),               true);
+  t.strictEqual(util.isObject(new Map()),                       true);
+  t.strictEqual(util.isObject(new Set()),                       true);
   t.strictEqual(util.isObject(new Dummy()),                     true);
   t.strictEqual(util.isObject(Object.create(null)),             true);
   t.strictEqual(util.isObject(Object.create(Array.prototype)),  true);
@@ -234,6 +267,8 @@ test("isPlainObject", function(t) {
   t.strictEqual(util.isPlainObject(new String('asd')),               false);
   t.strictEqual(util.isPlainObject(new Number(42)),                  false);
   t.strictEqual(util.isPlainObject(new Boolean(false)),              false);
+  t.strictEqual(util.isPlainObject(new Map()),                       false);
+  t.strictEqual(util.isPlainObject(new Set()),                       false);
   t.strictEqual(util.isPlainObject(new Dummy()),                     true);
   t.strictEqual(util.isPlainObject(Object.create(null)),             true);
   t.strictEqual(util.isPlainObject(Object.create(Array.prototype)),  true);
@@ -294,6 +329,37 @@ test("isRegExp", function(t) {
   t.strictEqual(util.isRegExp(Object.create(RegExp.prototype)), false);
   t.strictEqual(util.isRegExp(function(){}),                    false);
   t.strictEqual(util.isRegExp(Symbol("foo")),                   false);
+  t.end();
+});
+
+test("isSet", function(t) {
+  t.strictEqual(util.isSet({}),                              false);
+  t.strictEqual(util.isSet([]),                              false);
+  t.strictEqual(util.isSet(new Date),                        false);
+  t.strictEqual(util.isSet(/regexp/),                        false);
+  t.strictEqual(util.isSet(new String('asd')),               false);
+  t.strictEqual(util.isSet(new Number(42)),                  false);
+  t.strictEqual(util.isSet(new Boolean(false)),              false);
+  t.strictEqual(util.isSet(new Dummy()),                     false);
+  t.strictEqual(util.isSet(new Map()),                       false);
+  t.strictEqual(util.isSet(new Set()),                       true);
+  t.strictEqual(util.isSet(Object.create(null)),             false);
+  t.strictEqual(util.isSet(Object.create(Array.prototype)),  false);
+  t.strictEqual(util.isSet(Object.create(RegExp.prototype)), false);
+  t.strictEqual(util.isSet(Object.create(Date.prototype)),   false);
+  t.strictEqual(util.isSet(Object.create(RegExp.prototype)), false);
+  t.strictEqual(util.isSet(Object.create(Dummy.prototype)),  false);
+  t.strictEqual(util.isSet(),                                false);
+  t.strictEqual(util.isSet(null),                            false);
+  t.strictEqual(util.isSet(undefined),                       false);
+  t.strictEqual(util.isSet(false),                           false);
+  t.strictEqual(util.isSet(true),                            false);
+  t.strictEqual(util.isSet(0),                               false);
+  t.strictEqual(util.isSet(42),                              false);
+  t.strictEqual(util.isSet(''),                              false);
+  t.strictEqual(util.isSet('foo'),                           false);
+  t.strictEqual(util.isSet(function(){}),                    false);
+  t.strictEqual(util.isSet(Symbol("foo")),                   false);
   t.end();
 });
 
