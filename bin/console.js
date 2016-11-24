@@ -8,7 +8,7 @@ const path = require('path');
 
 const colors = require('colors/safe');
 
-const { createRepl } = require('../repl');
+const { createRepl, databaseRepl } = require('../lib/repl');
 
 const msgpack = require('msgpack-lite');
 
@@ -30,6 +30,8 @@ createRepl().then(repl => {
   });
   repl.on('reset', initializeContext);
 
+  databaseRepl(repl);
+
   const ben = require('ben');
 
   function initializeContext(context) {
@@ -38,10 +40,6 @@ createRepl().then(repl => {
       repl.lineParser.reset();
       repl.bufferedCommand = '';
       repl.displayPrompt();
-
-      // repl.writer = function(output) {
-        
-      // };
 
       context.database = db;
 
@@ -72,15 +70,3 @@ createRepl().then(repl => {
 
   initializeContext(repl.context);
 }).catch(err => console.warn(err.stack));
-
-
-/*
-
-var gzip = zlib.createGzip();
-for(var i = 0; i < 100000; ++i) {
-  gzip.write(msgpack.encode(['somethin','sanitet',i,{foo:'bar'}]))
-  let x = gzip.read();
-  if (x !== null) console.log(x)
-}
-
-*/
