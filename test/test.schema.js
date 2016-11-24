@@ -298,7 +298,7 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: "bar", scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: false}}, unschemed: "rarara"});
-        t.throws(() => { item.enum = "baz"; }, new TypeError('enum: property needs to be one of: "foo","bar"'));
+        t.throws(() => { item.enum = "baz"; }, new TypeError('enum: property needs to be one of: foo|bar'));
         t.throws(() => { item.name = null; }, new TypeError('name: property needs to be a string'));
         t.throws(() => { delete item.scal; }, new TypeError('scal: property is required'));
         return db.collections.test.replaceAndSave(item._id, {scal: true, name: "baz", time: 0, enum: "foo"});
