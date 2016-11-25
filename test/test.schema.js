@@ -147,7 +147,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(23);
+    t.plan(30);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
@@ -307,12 +307,39 @@ test("DB", suite => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'baz', enum: "foo", scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}});
         t.throws(() => { db.collections.test.replace(item._id, {}); }, new TypeError('scal: property is required'));
+        db.collections.test.add(item, 'name', 'zzz')
+        db.collections.test.add(item, 'time', +new Date(2016, 10, 25, 11, 45, 42, 500))
+        db.collections.test.add(item, 'other.nested.count', 101);
+        item.xxx = [1,'3',2];
+        item.xxxset = new Set([1,3,2]);
+        return db.save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'bazzzz', enum: "foo", scal: true, time: new Date(2016, 10, 25, 11, 45, 42, 500), other: {nested: {count: 111, flag: true}}, xxx: [1,'3',2], xxxset: [1,3,2]});
+        db.collections.test.subtract(item, 'name', 'baz')
+        db.collections.test.subtract(item, 'time', +new Date(2016, 10, 25, 11, 45, 42, 500))
+        db.collections.test.subtract(item, 'other.nested.count', 101);
+        db.collections.test.pull(item, 'xxx', '3');
+        db.collections.test.pull(item, 'xxxset', 3);
+        return db.save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'zzz', enum: "foo", scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}, xxx: [1,2], xxxset: [1,2]});
+
+        t.strictEqual(db.collections.test.size, 1);
+        return db.collections.test.deleteAllAndSave();
+      })
+      .then(success => {
+        t.strictEqual(success, true);
+        t.strictEqual(db.collections.test.size, 0);
       });
     }).catch(t.throws);
   });
 
   suite.test("should create database with simple relation", t => {
-    t.plan(35);
+    t.plan(40);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -412,6 +439,16 @@ test("DB", suite => {
           t.strictEqual(item.bar, bar);
           t.strictEqual(item.toJSON().bar.toString(), barid);
         }
+        t.strictEqual(db.collections.foos.size, 2);
+        t.strictEqual(db.collections.bars.size, 1);
+        delete db.collections.foos;
+        db.collections.bars.deleteAll();
+        return db.save();
+      })
+      .then(success => {
+        t.strictEqual(success, true);
+        t.strictEqual(db.collections.foos.size, 0);
+        t.strictEqual(db.collections.bars.size, 0);
       });
     }).catch(t.throws);
   });

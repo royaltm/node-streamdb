@@ -22,12 +22,35 @@ test("schema errors", suite => {
   });
 
   suite.test('property name error', t => {
-    t.throws(() => new DB({schema: {'foos': {__: String}}}), new SchemaSyntaxError('collection property name must not start with "__": foos:__'));
-    t.throws(() => new DB({schema: {'foos': {___: String}}}), new SchemaSyntaxError('collection property name must not start with "__": foos:___'));
-    t.throws(() => new DB({schema: {'foos': {'.': String}}}), new SchemaSyntaxError('collection property name must not start with ".": foos:.'));
-    t.throws(() => new DB({schema: {'foos': {'aaa..': String}}}), new SchemaSyntaxError('consecutive "." separator in schema property aaa..'));
-    t.throws(() => new DB({schema: {'foos': {'xxx..bbb': String}}}), new SchemaSyntaxError('consecutive "." separator in schema property xxx..bbb'));
-    t.throws(() => new DB({schema: {'foos': {'xxx.': String}}}), new SchemaSyntaxError('schema: property name must not end with a "." in xxx.'));
+    t.throws(() => new DB({schema: {'foos': {_id: String}}}),                  new SchemaSyntaxError('reserved collection property name: foos:_id'));
+    t.throws(() => new DB({schema: {'foos': {inspect: String}}}),              new SchemaSyntaxError('reserved collection property name: foos:inspect'));
+    t.throws(() => new DB({schema: {'foos': {toJSON: String}}}),               new SchemaSyntaxError('reserved collection property name: foos:toJSON'));
+    t.throws(() => new DB({schema: {'foos': {constructor: String}}}),          new SchemaSyntaxError('schema property already exists: foos:constructor'));
+    t.throws(() => new DB({schema: {'foos': {hasOwnProperty: String}}}),       new SchemaSyntaxError('schema property already exists: foos:hasOwnProperty'));
+    t.throws(() => new DB({schema: {'foos': {isPrototypeOf: String}}}),        new SchemaSyntaxError('schema property already exists: foos:isPrototypeOf'));
+    t.throws(() => new DB({schema: {'foos': {propertyIsEnumerable: String}}}), new SchemaSyntaxError('schema property already exists: foos:propertyIsEnumerable'));
+    t.throws(() => new DB({schema: {'foos': {toLocaleString: String}}}),       new SchemaSyntaxError('schema property already exists: foos:toLocaleString'));
+    t.throws(() => new DB({schema: {'foos': {toString: String}}}),             new SchemaSyntaxError('schema property already exists: foos:toString'));
+    t.throws(() => new DB({schema: {'foos': {valueOf: String}}}),              new SchemaSyntaxError('schema property already exists: foos:valueOf'));
+    t.throws(() => new DB({schema: {'foos': {__: String}}}),                   new SchemaSyntaxError('collection property name must not start with "__": foos:__'));
+    t.throws(() => new DB({schema: {'foos': {___: String}}}),                  new SchemaSyntaxError('collection property name must not start with "__": foos:___'));
+    t.throws(() => new DB({schema: {'foos': {'foo._id': String}}}),                  new SchemaSyntaxError('reserved collection property name: foos:foo._id'));
+    t.throws(() => new DB({schema: {'foos': {'foo.inspect': String}}}),              new SchemaSyntaxError('reserved collection property name: foos:foo.inspect'));
+    t.throws(() => new DB({schema: {'foos': {'foo.toJSON': String}}}),               new SchemaSyntaxError('reserved collection property name: foos:foo.toJSON'));
+    t.throws(() => new DB({schema: {'foos': {'foo.constructor': String}}}),          new SchemaSyntaxError('schema property already exists: foos:foo.constructor'));
+    t.throws(() => new DB({schema: {'foos': {'foo.hasOwnProperty': String}}}),       new SchemaSyntaxError('schema property already exists: foos:foo.hasOwnProperty'));
+    t.throws(() => new DB({schema: {'foos': {'foo.isPrototypeOf': String}}}),        new SchemaSyntaxError('schema property already exists: foos:foo.isPrototypeOf'));
+    t.throws(() => new DB({schema: {'foos': {'foo.propertyIsEnumerable': String}}}), new SchemaSyntaxError('schema property already exists: foos:foo.propertyIsEnumerable'));
+    t.throws(() => new DB({schema: {'foos': {'foo.toLocaleString': String}}}),       new SchemaSyntaxError('schema property already exists: foos:foo.toLocaleString'));
+    t.throws(() => new DB({schema: {'foos': {'foo.toString': String}}}),             new SchemaSyntaxError('schema property already exists: foos:foo.toString'));
+    t.throws(() => new DB({schema: {'foos': {'foo.valueOf': String}}}),              new SchemaSyntaxError('schema property already exists: foos:foo.valueOf'));
+    t.throws(() => new DB({schema: {'foos': {__: String}}}),                   new SchemaSyntaxError('collection property name must not start with "__": foos:__'));
+    t.throws(() => new DB({schema: {'foos': {___: String}}}),                  new SchemaSyntaxError('collection property name must not start with "__": foos:___'));
+    t.throws(() => new DB({schema: {'foos': {'.': String}}}),                  new SchemaSyntaxError('invalid "." separator placement in schema property foos:.'));
+    t.throws(() => new DB({schema: {'foos': {'aaa..': String}}}),              new SchemaSyntaxError('invalid "." separator placement in schema property foos:aaa..'));
+    t.throws(() => new DB({schema: {'foos': {'xxx..bbb': String}}}),           new SchemaSyntaxError('invalid "." separator placement in schema property foos:xxx..bbb'));
+    t.throws(() => new DB({schema: {'foos': {'xxx.': String}}}),               new SchemaSyntaxError('schema: property name must not end with a "." in foos:xxx.'));
+    t.throws(() => new DB({schema: {'foos': {'xxx.yyy.': String}}}),           new SchemaSyntaxError('schema: property name must not end with a "." in foos:xxx.yyy.'));
     t.end();
   });
 
@@ -103,12 +126,12 @@ test("schema errors", suite => {
   suite.test('foreign schema conflict', t => {
     t.throws(() => new DB({schema: {foos: {bar: {hasOne: "bar"}}, bars: {foo: {hasOne: {collection: "foos", hasOne: "bar"}}}}}), new SchemaSyntaxError("can't assign foreign schema to foos:bar from bars:foo"));
     t.throws(() => new DB({schema: {foos: {bars: String}, bars: {foo: {hasOne: {collection: "foos", hasMany: "bars"}}}}}), new SchemaSyntaxError("can't assign foreign schema to foos:bars from bars:foo"));
-    t.throws(() => new DB({schema: {foos: {bars: {hasMany: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasMany: {collection: "foos", hasMany: "bars"}}}}}), new SchemaSyntaxError("schema property descriptor already exists: bars:foos"));
-    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: String}}}), new SchemaSyntaxError("schema property descriptor already exists: bars:foos"));
-    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasMany: {collection: "foos", hasMany: "bars"}}}}}), new SchemaSyntaxError("schema property descriptor already exists: bars:foos"));
-    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasOne: {collection: "foos", hasOne: "bar"}}}}}), new SchemaSyntaxError("schema property descriptor already exists: bars:foos"));
-    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasOne: {collection: "foos", hasMany: "bars"}}}}}), new SchemaSyntaxError("schema property descriptor already exists: bars:foos"));
-    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasOne: "foo"}}}, bars: {foo: {hasOne: {collection: "foos", hasOne: "bar"}}}}}), new SchemaSyntaxError("schema property descriptor already exists: bars:foo"));
+    t.throws(() => new DB({schema: {foos: {bars: {hasMany: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasMany: {collection: "foos", hasMany: "bars"}}}}}), new SchemaSyntaxError("schema property already exists: bars:foos"));
+    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: String}}}), new SchemaSyntaxError("schema property already exists: bars:foos"));
+    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasMany: {collection: "foos", hasMany: "bars"}}}}}), new SchemaSyntaxError("schema property already exists: bars:foos"));
+    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasOne: {collection: "foos", hasOne: "bar"}}}}}), new SchemaSyntaxError("schema property already exists: bars:foos"));
+    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasMany: "foos"}}}, bars: {foos: {hasOne: {collection: "foos", hasMany: "bars"}}}}}), new SchemaSyntaxError("schema property already exists: bars:foos"));
+    t.throws(() => new DB({schema: {foos: {bar: {hasOne: {collection: "bars", hasOne: "foo"}}}, bars: {foo: {hasOne: {collection: "foos", hasOne: "bar"}}}}}), new SchemaSyntaxError("schema property already exists: bars:foo"));
     t.end();
   });
 
