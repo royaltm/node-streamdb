@@ -194,7 +194,7 @@ test("update errors", suite => {
         t.strictEquals(frank.email, "name2@example.com");
         t.strictEquals(frank.robots.length, 0);
       })
-    }).catch(t.throws);
+    }).catch(t.threw);
   });
 
   suite.end();

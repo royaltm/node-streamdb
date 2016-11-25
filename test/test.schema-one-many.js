@@ -215,7 +215,7 @@ test("DB", suite => {
         t.deepEqual(item.toJSON(), {_id: item._id, name: "meow"});
         t.strictEqual(item.bar, undefined);
       });
-    }).catch(t.throws);
+    }).catch(t.threw);
 
   });
 

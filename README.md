@@ -209,3 +209,29 @@ Then...
 console.log("%j", sagitarius.stars);
 assert(sagitarius.stars.length === 0);
 ```
+
+Schema
+------
+
+Schema is versioned using [semver](http://semver.org/) syntax without the pre-release tags (only MAJOR.MINOR.PATH).
+
+Version can be set as `schema._version` property in `schema` option given to DB constructor.
+
+Default version assumed is `1.0.0`.
+
+Version is exported with `db.createDataExporter` command.
+The database reads version command and decides whether to emit an `error`.
+
+The error is emitted when:
+
+- major version read is different than schema major
+- minor version read is greater than schema minor
+- version read could not be parsed
+
+Version patch is simply ignored and has only informative purpose.
+
+When database reads version and decides not to emit an `error` it emits `version` message instead.
+
+if read.major != my.major error
+if read.minor > my.minor error
+

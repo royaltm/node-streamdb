@@ -277,7 +277,7 @@ test("DB", suite => {
         t.strictEqual(db.collections.bars.size, 2);
         t.strictEqual(db.collections.foos.size, 1);
       });
-    }).catch(t.throws);
+    }).catch(t.threw);
 
   });
 

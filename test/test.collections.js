@@ -9,7 +9,10 @@ const Ident = require('../lib/id').Ident;
 test("DB", suite => {
 
   suite.test('should have collections from schema', t => {
+    t.plan(63);
+
     var db = new DB({schema: {
+      _version: '1.2.3',
       constellations: {
         name: {type: String, unique: true, required: true},
         'location.ra': Number,
@@ -24,6 +27,8 @@ test("DB", suite => {
       }
     }});
 
+    t.strictEqual(db.schemaVersion.version, '1.2.3');
+    t.strictSame(db.schemaVersion, {major: 1, minor: 2, patch: 3, version: '1.2.3'});
     t.deepEqual(Object.keys(db.collections), ['constellations', 'stars']);
     t.strictEqual('constellations' in db.collections, true);
     t.strictEqual('stars' in db.collections, true);
@@ -85,8 +90,16 @@ test("DB", suite => {
       t.strictEqual(db.collections.constellations.by.name.get('Sagittarius'), constellation);
       t.strictEqual(db.collections.constellations.by.name.size, 1);
       t.strictEqual(db.collections.constellations.by.name.has('Sagittarius'), true);
-      t.end();
-    });
+
+      db.pushVersionMark();
+
+      db.on('version', ver => {
+        t.strictSame(ver, db.schemaVersion);
+        t.strictSame(ver, {major: 1, minor: 2, patch: 3, version: '1.2.3'});
+      });
+      return db.save();
+    }).catch(t.threw);
+
 
   });
 

@@ -221,7 +221,7 @@ test("DB", suite => {
           t.strictEqual(item.toJSON().bar, undefined);
         }
       });
-    }).catch(t.throws);
+    }).catch(t.threw);
   });
 
   suite.end();

@@ -143,7 +143,7 @@ test("DB", suite => {
         t.type(item, Item)
         t.deepEqual(item.toJSON(), {_id: item._id, other: {nested: {}}});
       });
-    }).catch(t.throws);
+    }).catch(t.threw);
   });
 
   suite.test("should create database with default constraint schema", t => {
@@ -335,7 +335,7 @@ test("DB", suite => {
         t.strictEqual(success, true);
         t.strictEqual(db.collections.test.size, 0);
       });
-    }).catch(t.throws);
+    }).catch(t.threw);
   });
 
   suite.test("should create database with simple relation", t => {
@@ -450,7 +450,7 @@ test("DB", suite => {
         t.strictEqual(db.collections.foos.size, 0);
         t.strictEqual(db.collections.bars.size, 0);
       });
-    }).catch(t.throws);
+    }).catch(t.threw);
   });
 
   suite.end();
