@@ -16,7 +16,8 @@ const DB = require('../lib');
 const { Item } = require('../lib/collection/item');
 const { Collection } = require('../lib/collection');
 const { iter, orderBy, range, times, Iterator, createFilterFn } = require('../lib/iter');
-const createExampleDb = require(`../example/${process.argv[2] || 'cellestial'}`);
+const databaseName = process.argv[2] || 'cellestial';
+const createExampleDb = require(`../example/${databaseName}`);
 
 console.log("----------------------------");
 console.log("node-streamdb REPL, welcome!");
@@ -30,24 +31,21 @@ createRepl().then(repl => {
   });
   repl.on('reset', initializeContext);
 
-  databaseRepl(repl);
+  databaseRepl(repl, {databaseName});
 
   const ben = require('ben');
 
   function initializeContext(context) {
     createExampleDb().then(db => {
       console.log(colors.green('\nDatabase ready!'));
+      context.database = db;
+      context.db = db.collections
+
+      repl.resetDatabasePrompt();
       repl.lineParser.reset();
       repl.bufferedCommand = '';
       repl.displayPrompt();
 
-      context.database = db;
-
-      context.db = {};
-
-      for(let name in db.collections) {
-        context.db[name] = db.collection(name);
-      }
     }).catch(err => console.warn(err.stack));
 
     Object.assign(context, {
