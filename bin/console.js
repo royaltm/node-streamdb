@@ -8,7 +8,7 @@ const path = require('path');
 
 const colors = require('colors/safe');
 
-const { createRepl, databaseRepl } = require('../lib/repl');
+const { createRepl, databaseRepl, prompt } = require('../lib/repl');
 
 const msgpack = require('msgpack-lite');
 
@@ -39,7 +39,17 @@ createRepl().then(repl => {
     createExampleDb().then(db => {
       console.log(colors.green('\nDatabase ready!'));
       context.database = db;
-      context.db = db.collections
+      context.db = db.collections;
+
+      db.on('error', err => {
+        console.log("%s %s", colors.red('ERROR'), err);
+        if (err.stack) console.warn(err.stack);
+        prompt(repl);
+      })
+      .on('version', ver => {
+        console.log("DB schema version tag accepted: %s", colors.green(ver.version));
+        prompt(repl);
+      });
 
       repl.resetDatabasePrompt();
       repl.lineParser.reset();
