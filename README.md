@@ -146,11 +146,10 @@ Let's try to create a few more stars.
 
 ```js
 var sagitarius = constellations.name.get("Sagittarius");
-stars.save(() => {
-  stars.create({name: "Arkab", bayer: "β Sagittarii", constellation: sagitarius});
-  stars.create({name: "Alrami", bayer: "α Sagittarii", constellation: sagitarius});
-  stars.create({name: "Albaldah", bayer: "π Sagittarii", constellation: sagitarius});
-}).catch(err => console.log(err.message));
+stars.create({name: "Arkab", bayer: "β Sagittarii", constellation: sagitarius});
+stars.create({name: "Alrami", bayer: "α Sagittarii", constellation: sagitarius});
+stars.create({name: "Albaldah", bayer: "π Sagittarii", constellation: sagitarius});
+stars.save().catch(err => console.log(err.message));
 // unique constraint violated: stars["575d7e9b26f27e31fcba7895"].name = Alrami
 ```
 
