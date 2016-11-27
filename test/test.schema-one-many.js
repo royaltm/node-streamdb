@@ -16,7 +16,7 @@ const { SchemaSyntaxError, UniqueConstraintViolationError } = require('../lib/er
 test("DB", suite => {
 
   suite.test("should create database with one to many relations", t => {
-    t.plan(98);
+    t.plan(120);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -30,49 +30,47 @@ test("DB", suite => {
     var db = new DB({schema: schema});
     t.type(db, DB);
 
-    t.strictSame(db.collections.foos[Symbol.for('schema')], {
-      "name": {
-        "name": "name",
-        "prop": "name",
-        "required": true,
-        "type": String,
-      },
-      "value": {
-        "name": "value",
-        "prop": "value",
-        "required": false,
-        "type": new Primitive(),
-      },
-      "bar": {
-        "name": "bar",
-        "prop": "bar",
-        "required": false,
-        "type": "bars",
-        "collection": db.collections.bars[$this],
-        "hasOne": true,
-        "klass": db.collections.bars[$this][$itemKlass],
-        "foreign": "foos"
-      }
+    t.strictSame(Object.keys(db.collections.foos[Symbol.for('schema')]), ['name', 'value', 'bar']);
+    t.strictSame(db.collections.foos[Symbol.for('schema')].name, {
+      "name": "name",
+      "prop": "name",
+      "required": true,
+      "type": String
     });
+    t.strictSame(db.collections.foos[Symbol.for('schema')].value, {
+      "name": "value",
+      "prop": "value",
+      "required": false,
+      "type": new Primitive()
+    });
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.required, false);
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[$this]);
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[$this][$itemKlass]);
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.foreign, "foos");
+    t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
+    t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, 'symbol');
 
-    t.strictSame(db.collections.bars[Symbol.for('schema')], {
-      "counter": {
-        "default": 0,
-        "name": "counter",
-        "prop": "counter",
-        "required": false,
-        "type": Number,
-      },
-      "foos": {
-        "name": "foos",
-        "prop": "foos",
-        "type": "foos",
-        "collection": db.collections.foos[$this],
-        "klass": db.collections.foos[$this][$itemKlass],
-        "primary": "bar",
-        "hasMany": true
-      }
+    t.strictSame(Object.keys(db.collections.bars[Symbol.for('schema')]), ['foos', 'counter']);
+    t.strictSame(db.collections.bars[Symbol.for('schema')].counter, {
+      "default": 0,
+      "name": "counter",
+      "prop": "counter",
+      "required": false,
+      "type": Number
     });
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.name, "foos");
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.prop, "foos");
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.type, "foos");
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.collection, db.collections.foos[$this]);
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.klass, db.collections.foos[$this][$itemKlass]);
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.primary, "bar");
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.hasMany, true);
+    t.type(db.collections.bars[Symbol.for('schema')].foos.readPropertySymbol, 'symbol');
+    t.type(db.collections.bars[Symbol.for('schema')].foos.writePropertySymbol, 'symbol');
 
     t.strictEqual(db.collections.foos.size, 0);
     t.strictEqual(db.collections.bars.size, 0);
