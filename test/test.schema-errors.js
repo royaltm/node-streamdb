@@ -100,6 +100,12 @@ test("schema errors", suite => {
     t.end();
   });
 
+  suite.test('forbidden indexed types', t => {
+    t.throws(() => new DB({schema: {foo: {bar: {type: Date, unique: true}}}}), new SchemaSyntaxError("unimplemented: unique index on Date type property in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: Date, index: true}}}}), new SchemaSyntaxError("unimplemented: index on Date type property in foo:bar"));
+    t.end();
+  });
+
   suite.test('relation required error', t => {
     t.throws(() => new DB({schema: {foo: {bar: {hasOne: "bar", required: true}}}}), new SchemaSyntaxError("required is not supported with relations in for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {hasOne: {collection: "bar", hasMany: "foos"}, required: true}}}}), new SchemaSyntaxError("required is not supported with relations in for foo:bar"));
