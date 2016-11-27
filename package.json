@@ -5,7 +5,7 @@
   "description": "log based in-memory document database",
   "main": "lib/index.js",
   "scripts": {
-    "test": "tap -C -Rclassic test/test.*.js",
+    "test": "tap -C -Rclassic --strict test/test.*.js",
     "cli": "node bin/console.js"
   },
   "author": "Rafał Michalski <royal@yeondir.com>",

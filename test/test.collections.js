@@ -9,7 +9,7 @@ const Ident = require('../lib/id').Ident;
 test("DB", suite => {
 
   suite.test('should have collections from schema', t => {
-    t.plan(63);
+    t.plan(64);
 
     var db = new DB({schema: {
       _version: '1.2.3',
@@ -94,6 +94,7 @@ test("DB", suite => {
       db.pushVersionMark();
 
       db.on('version', ver => {
+        t.notStrictEqual(ver, db.schemaVersion);
         t.strictSame(ver, db.schemaVersion);
         t.strictSame(ver, {major: 1, minor: 2, patch: 3, version: '1.2.3'});
       });

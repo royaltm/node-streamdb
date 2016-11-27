@@ -197,5 +197,54 @@ test("update errors", suite => {
     }).catch(t.threw);
   });
 
+  suite.test('update rejection event', t => {
+    t.plan(13);
+    var db = new DB({schema: {
+      things: {
+        unique: {type: 'primitive', unique: true, required: true}
+      }
+    }});
+
+    t.deepEqual(Object.keys(db.collections), ['things']);
+    t.strictEqual('things' in db.collections, true);
+    t.type(db.collections.things, Collection);
+    t.strictEqual(db.collections.things.size, 0);
+
+    db.stream.pipe(db.stream);
+    return db.writable.then(db => {
+      var promise = Promise.all([
+        new Promise((resolve, reject) => {
+          db.on('update', (pending) => {
+            try {
+              t.type(pending, Array);
+              t.strictEqual(pending.length, 1 + 3*5);
+              resolve();
+            } catch(err) { reject(err) };
+          });
+        }),
+        new Promise((resolve, reject) => {
+          db.on('updateRejection', (err, pending, index) => {
+            try {
+              t.type(err, UniqueConstraintViolationError)
+              t.matches(err.message, /^unique constraint violated: things\["[0-9a-f]{24}"\]\.unique = 1$/);
+              t.strictEqual(err.isUniqueConstraintViolation, true);
+              t.strictEqual(db.collections.things.size, 1);
+              t.strictEqual(db.collections.things[thingid]._id, thingid);
+              t.strictEqual(db.collections.things[0]._id, thingid);
+              t.strictEqual(db.collections.things[0].unique, 1);
+              resolve();
+            } catch(err) { reject(err) };
+          });
+        })
+      ]);
+
+      var thingid = db.collections.things.create({unique: 1});
+      db.collections.things.create({unique: 1});
+      db.collections.things.create({unique: 2});
+
+      return promise;
+    }).catch(t.threw);
+  });
+
   suite.end();
 });

@@ -8,7 +8,7 @@ const path = require('path');
 
 const colors = require('colors/safe');
 
-const { createRepl, databaseRepl, prompt } = require('../lib/repl');
+const { createRepl, databaseRepl, showPending, prompt } = require('../lib/repl');
 
 const msgpack = require('msgpack-lite');
 
@@ -48,6 +48,12 @@ createRepl().then(repl => {
       })
       .on('version', ver => {
         console.log("DB schema version tag accepted: %s", colors.green(ver.version));
+        prompt(repl);
+      })
+      .on('updateRejection', (err, args, idx)=> {
+        console.log("%s %s", colors.red('UPDATE REJECTED'), err);
+        console.log(colors.grey("Rejected updates:"));
+        showPending(args, idx);
         prompt(repl);
       });
 
