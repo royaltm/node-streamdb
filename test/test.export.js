@@ -48,7 +48,7 @@ test("DB", suite => {
       t.type(exporter.throw, 'function');
       var i = 0;
       for(var line of exporter) {
-        t.strictEquals(JSON.stringify(line), JSON.stringify(exported[i++]));
+        t.strictEqual(JSON.stringify(line), JSON.stringify(exported[i++]));
       }
       t.end();
     })
