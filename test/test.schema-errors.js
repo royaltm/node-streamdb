@@ -47,6 +47,7 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {'foos': {__: String}}}),                   new SchemaSyntaxError('collection property name must not start with "__": foos:__'));
     t.throws(() => new DB({schema: {'foos': {___: String}}}),                  new SchemaSyntaxError('collection property name must not start with "__": foos:___'));
     t.throws(() => new DB({schema: {'foos': {'.': String}}}),                  new SchemaSyntaxError('invalid "." separator placement in schema property foos:.'));
+    t.throws(() => new DB({schema: {'foos': {'.bar': String}}}),               new SchemaSyntaxError('invalid "." separator placement in schema property foos:.bar'));
     t.throws(() => new DB({schema: {'foos': {'aaa..': String}}}),              new SchemaSyntaxError('invalid "." separator placement in schema property foos:aaa..'));
     t.throws(() => new DB({schema: {'foos': {'xxx..bbb': String}}}),           new SchemaSyntaxError('invalid "." separator placement in schema property foos:xxx..bbb'));
     t.throws(() => new DB({schema: {'foos': {'xxx.': String}}}),               new SchemaSyntaxError('schema: property name must not end with a "." in foos:xxx.'));
@@ -56,7 +57,8 @@ test("schema errors", suite => {
 
   suite.test('property type error', t => {
     t.throws(() => new DB({schema: {foo: {bar: Object}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
-    t.throws(() => new DB({schema: {foo: {bar: []}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: []}}}), new SchemaSyntaxError("composite index requires at least 2 components in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: ['rab']}}}), new SchemaSyntaxError("composite index requires at least 2 components in foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: 0}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: null}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: undefined}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));

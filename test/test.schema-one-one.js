@@ -70,7 +70,7 @@ test("DB", suite => {
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.klass, db.collections.foos[$this][$itemKlass]);
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.primary, "bar");
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.hasMany, false);
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.readPropertySymbol, undefined);
+    t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.writePropertySymbol, undefined);
 
     t.strictEqual(db.collections.foos.size, 0);
