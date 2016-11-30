@@ -11,8 +11,6 @@ const isIdent = require('../lib/id').isIdent;
 const ManyToOneSet = require('../lib/collection/schema/many_to_one');
 const Primitive = require('../lib/collection/schema/types').primitive;
 
-const { SchemaSyntaxError, UniqueConstraintViolationError } = require('../lib/errors');
-
 test("DB", suite => {
 
   suite.test("should create database with one to many relations", t => {

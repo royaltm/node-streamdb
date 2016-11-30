@@ -10,7 +10,7 @@ const $itemKlass = require('../lib/collection/schema').itemKlassSym;
 const isIdent = require('../lib/id').isIdent;
 const Primitive = require('../lib/collection/schema/types').primitive;
 
-const { SchemaSyntaxError, UniqueConstraintViolationError } = require('../lib/errors');
+const { UniqueConstraintViolationError } = require('../lib/errors');
 
 test("DB", suite => {
 

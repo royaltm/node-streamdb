@@ -67,6 +67,23 @@ test("MultiValueIndex", suite => {
     t.end();
   });
 
+  suite.test('should values not be settable deletable or clearable', t => {
+    var index = new MultiValueIndex();
+    t.throws(() => index.get(1).add('a'), new Error("this is a read only set"));
+    t.throws(() => index.get(1).clear(), new Error("this is a read only set"));
+    t.throws(() => index.get(1).delete(1), new Error("this is a read only set"));
+    t.strictEquals(index.add(1, 'a'), index);
+    t.throws(() => index.get(1).add('b'), new Error("this is a read only set"));
+    t.throws(() => index.get(1).clear(), new Error("this is a read only set"));
+    t.throws(() => index.get(1).delete(1), new Error("this is a read only set"));
+    t.strictEquals(index.size, 1);
+    t.strictSame(index.toArray(), ['a']);
+    t.strictEquals(index.delete(1, 'a'), true);
+    t.strictEquals(index.size, 0);
+    t.strictSame(index.toArray(), []);
+    t.end();
+  });
+
   suite.test('should not be settable or clearable', t => {
     var index = new MultiValueIndex();
     t.throws(() => index.set(1, 'a'), new Error("forbidden: this is a multi-value index"));

@@ -50,15 +50,14 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {'foos': {'.bar': String}}}),               new SchemaSyntaxError('invalid "." separator placement in schema property foos:.bar'));
     t.throws(() => new DB({schema: {'foos': {'aaa..': String}}}),              new SchemaSyntaxError('invalid "." separator placement in schema property foos:aaa..'));
     t.throws(() => new DB({schema: {'foos': {'xxx..bbb': String}}}),           new SchemaSyntaxError('invalid "." separator placement in schema property foos:xxx..bbb'));
-    t.throws(() => new DB({schema: {'foos': {'xxx.': String}}}),               new SchemaSyntaxError('schema: property name must not end with a "." in foos:xxx.'));
-    t.throws(() => new DB({schema: {'foos': {'xxx.yyy.': String}}}),           new SchemaSyntaxError('schema: property name must not end with a "." in foos:xxx.yyy.'));
+    t.throws(() => new DB({schema: {'foos': {'xxx.': String}}}),               new SchemaSyntaxError('property name must not end with a "." in foos:xxx.'));
+    t.throws(() => new DB({schema: {'foos': {'xxx.yyy.': String}}}),           new SchemaSyntaxError('property name must not end with a "." in foos:xxx.yyy.'));
+    t.throws(() => new DB({schema: {'foos': {'': String}}}),                   new SchemaSyntaxError('property name must not be empty in foos:'));
     t.end();
   });
 
   suite.test('property type error', t => {
     t.throws(() => new DB({schema: {foo: {bar: Object}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
-    t.throws(() => new DB({schema: {foo: {bar: []}}}), new SchemaSyntaxError("composite index requires at least 2 components in foo:bar"));
-    t.throws(() => new DB({schema: {foo: {bar: ['rab']}}}), new SchemaSyntaxError("composite index requires at least 2 components in foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: 0}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: null}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: undefined}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
@@ -105,6 +104,45 @@ test("schema errors", suite => {
   suite.test('forbidden indexed types', t => {
     t.throws(() => new DB({schema: {foo: {bar: {type: Date, unique: true}}}}), new SchemaSyntaxError("unimplemented: unique index on Date type property in foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {type: Date, index: true}}}}), new SchemaSyntaxError("unimplemented: index on Date type property in foo:bar"));
+    t.end();
+  });
+
+  suite.test('composite index errors', t => {
+    t.throws(() => new DB({schema: {foos: {bar: [{}]}}}), new SchemaSyntaxError("composite index components must be an array of property names: foos:bar"));
+    t.throws(() => new DB({schema: {foos: {bar: {components: [{}]}}}}), new SchemaSyntaxError("composite index components must be an array of property names: foos:bar"));
+    t.throws(() => new DB({schema: {foos: {bar: []}}}), new SchemaSyntaxError("composite index requires at least 2 components in foos:bar"));
+    t.throws(() => new DB({schema: {foos: {bar: ['rab']}}}), new SchemaSyntaxError("composite index requires at least 2 components in foos:bar"));
+    t.throws(() => new DB({schema: {foos: {bar: ['x','y']}}}), new SchemaSyntaxError("unimplemented: composite non-unique index in foos:bar"));
+    t.throws(() => new DB({schema: {foos: {bar: {components: ['x','y']}}}}), new SchemaSyntaxError("unimplemented: composite non-unique index in foos:bar"));
+    t.throws(() => new DB({schema: {foos: {'b.ar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError('composite index name must not include "." in foos:b.ar'));
+    t.throws(() => new DB({schema: {foos: {'toJSON': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("reserved composite index name: foos:toJSON"));
+    t.throws(() => new DB({schema: {foos: {'__bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError('composite index name must not start with "__": foos:__bar'));
+    t.throws(() => new DB({schema: {foos: {'': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError('composite index name must not be empty in foos:'));
+    t.throws(() => new DB({schema: {foos: {'bar': {unique: true, components: ['x.x','y']}}}}), new SchemaSyntaxError("unimplemented composite index on deep property in foos:x.x"));
+    t.throws(() => new DB({schema: {foos: {'bar': {unique: true, components: ['','y']}}}}), new SchemaSyntaxError("property name must not be empty in foos:"));
+    t.throws(() => new DB({schema: {foos: {'bar': {unique: true, components: ['__','y']}}}}), new SchemaSyntaxError('collection property name must not start with "__": foos:__'));
+    t.throws(() => new DB({schema: {foos: {'bar': {unique: true, components: ['___','y']}}}}), new SchemaSyntaxError('collection property name must not start with "__": foos:___'));
+    t.throws(() => new DB({schema: {foos: {'bar': {unique: true, components: ['toJSON','y']}}}}), new SchemaSyntaxError("reserved collection property name: foos:toJSON"));
+    t.throws(() => new DB({schema: {foos: {'x': Date, 'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
+    t.throws(() => new DB({schema: {foos: {'x': {hasMany: {collection: 'bars', hasMany: 'foos'}}, 'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
+    t.throws(() => new DB({schema: {
+        foos: {'bar': {unique: true, components: ['x','y']}},
+        bars: {'z': {hasOne: {collection: 'foos', hasOne: 'x'}}}}}), new SchemaSyntaxError("can't assign foreign schema to foos:x from bars:z"));
+    t.throws(() => new DB({schema: {
+        foos: {'bar': {unique: true, components: ['x','y']}},
+        bars: {'z': {hasOne: {collection: 'foos', hasMany: 'x'}}}}}), new SchemaSyntaxError("can't assign foreign schema to foos:x from bars:z"));
+    t.throws(() => new DB({schema: {
+        foos: {'bar': {unique: true, components: ['x','y']}},
+        bars: {'z': {hasMany: {collection: 'foos', hasMany: 'x'}}}}}), new SchemaSyntaxError("can't assign foreign schema to foos:x from bars:z"));
+    t.throws(() => new DB({schema: {
+        bars: {'z': {hasOne: {collection: 'foos', hasOne: 'x'}}},
+        foos: {'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
+    t.throws(() => new DB({schema: {
+        bars: {'z': {hasOne: {collection: 'foos', hasMany: 'x'}}},
+        foos: {'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
+    t.throws(() => new DB({schema: {
+        bars: {'z': {hasMany: {collection: 'foos', hasMany: 'x'}}},
+        foos: {'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
     t.end();
   });
 

@@ -11,8 +11,6 @@ const isIdent = require('../lib/id').isIdent;
 const Primitive = require('../lib/collection/schema/types').primitive;
 const Enum = require('../lib/collection/schema/types').enum;
 
-const { SchemaSyntaxError, UniqueConstraintViolationError } = require('../lib/errors');
-
 test("DB", suite => {
 
   suite.test("should create database with type constraint schema", t => {
