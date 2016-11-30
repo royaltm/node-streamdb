@@ -13,8 +13,6 @@ const Enum = require('../lib/collection/schema/types').enum;
 
 const { MultiValueIndex } = require('../lib/collection/indexes');
 
-const { UniqueConstraintViolationError } = require('../lib/errors');
-
 test("DB", suite => {
 
   suite.test("should create database with index", t => {

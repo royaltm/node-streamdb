@@ -18,7 +18,7 @@ const { UniqueConstraintViolationError } = require('../lib/errors');
 test("DB", suite => {
 
   suite.test("should create database with unique index", t => {
-    t.plan(48+74);
+    t.plan(48+84);
     var db = new DB({schema: {
       test: {
         bool: {type: Boolean, unique: true},
@@ -122,8 +122,19 @@ test("DB", suite => {
     }).catch(err => {
       t.type(err, UniqueConstraintViolationError);
       t.matches(err.message, /unique constraint violated: test\["[0-9a-f]{24}"\].bool = true/);
+      t.strictEquals(err.conflictKey, true);
+      t.type(err.constraintIndex, UniqueIndex);
+      t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.test[itemid]);
       t.strictEquals(db.collections.test.size, 1);
-      return db.collections.test.createAndSave({bool: false, value: null, serial: 42, name: 'foo', time: new Date(2017,0,1)});
+
+      return db.collections.test.createAndSaveOrGetIfConflict({bool: true, value: null, serial: 42, name: 'foo', time: new Date(2017,0,1)});
+    }).then(item => {
+      t.type(item, Item);
+      t.deepEqual(item.toJSON(), {_id: itemid, bool: true});
+      t.strictEquals(db.collections.test.size, 1);
+      t.strictEquals(db.collections.test[0], db.collections.test[itemid])
+
+      return db.collections.test.createAndSaveOrGetIfConflict({bool: false, value: null, serial: 42, name: 'foo', time: new Date(2017,0,1)});
     }).then(item => {
       t.strictEquals(db.collections.test.size, 2);
       t.type(item, Item);
@@ -149,9 +160,13 @@ test("DB", suite => {
     }).catch(err => {
       t.type(err, UniqueConstraintViolationError);
       t.strictEquals(err.message, `unique constraint violated: test["${itemid}"].name = foo`);
+      t.strictEquals(err.conflictKey, 'foo');
+      t.type(err.constraintIndex, UniqueIndex);
+      t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.test[1]);
       t.strictEquals(db.collections.test.size, 2);
       var item = db.collections.test[itemid];
       t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: itemid, bool: true, value: 1, serial: 77});
+
       return db.collections.test.deleteAndSave(db.collections.test.by.bool.get(false));
     }).then(success => {
       t.strictEquals(db.collections.test.size, 1);

@@ -10,12 +10,14 @@ const $itemKlass = require('../lib/collection/schema').itemKlassSym;
 const isIdent = require('../lib/id').isIdent;
 const Primitive = require('../lib/collection/schema/types').primitive;
 
+const { UniqueIndex } = require('../lib/collection/indexes');
+
 const { UniqueConstraintViolationError } = require('../lib/errors');
 
 test("DB", suite => {
 
   suite.test("should create database with one to one relations", t => {
-    t.plan(107);
+    t.plan(110);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -101,6 +103,9 @@ test("DB", suite => {
       .catch(err => {
         t.type(err, UniqueConstraintViolationError);
         t.strictEqual(err.message, `unique constraint violated: foos["${fooid}"].bar = ${barid}`);
+        t.strictEquals(err.conflictKey, barid);
+        t.type(err.constraintIndex, UniqueIndex);
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.foos[0]);
         var bar = db.collections.bars[barid];
         fooid = bar.foo._id;
         t.ok(isIdent(fooid));

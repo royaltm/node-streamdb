@@ -5,12 +5,15 @@ const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 const Collection = require('../lib/collection').Collection;
 const Ident = require('../lib/id').Ident;
+
+const { UniqueIndex } = require('../lib/collection/indexes');
+
 const { UniqueConstraintViolationError } = require('../lib/errors');
 
 test("update errors", suite => {
 
   suite.test('unique errors', t => {
-    t.plan(117);
+    t.plan(132);
     var db = new DB({schema: {
       robots: {
         serial: {type: Number, unique: true, required: true},
@@ -66,6 +69,9 @@ test("update errors", suite => {
         t.type(err, UniqueConstraintViolationError);
         t.matches(err.message, /^unique constraint violated: users\["[0-9a-f]{24}"\]\.email = name@example\.com$/);
         t.strictEqual(err.isUniqueConstraintViolation, true);
+        t.strictEquals(err.conflictKey, "name@example.com");
+        t.type(err.constraintIndex, UniqueIndex);
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.users[0]);
         var frank = db.collections.users[0];
         t.type(frank, Item);
         t.strictEqual(db.collections.users.size, 1);
@@ -80,6 +86,9 @@ test("update errors", suite => {
         t.type(err, UniqueConstraintViolationError);
         t.matches(err.message, /^unique constraint violated: users\["[0-9a-f]{24}"\]\.email = name@example\.com$/);
         t.strictEqual(err.isUniqueConstraintViolation, true);
+        t.strictEquals(err.conflictKey, "name@example.com");
+        t.type(err.constraintIndex, UniqueIndex);
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.users[0]);
         var frank = db.collections.users[0];
         t.type(frank, Item);
         t.strictEqual(db.collections.users.size, 1);
@@ -110,6 +119,9 @@ test("update errors", suite => {
         t.type(err, UniqueConstraintViolationError);
         t.matches(err.message, /^unique constraint violated: robots\["[0-9a-f]{24}"\]\.serial = 1$/);
         t.strictEqual(err.isUniqueConstraintViolation, true);
+        t.strictEquals(err.conflictKey, 1);
+        t.type(err.constraintIndex, UniqueIndex);
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.robots[0]);
         var frank = db.collections.users[1];
         t.type(frank, Item);
         t.strictEqual(db.collections.robots.size, 2);
@@ -137,6 +149,9 @@ test("update errors", suite => {
         t.type(err, UniqueConstraintViolationError);
         t.matches(err.message, /^unique constraint violated: users\["[0-9a-f]{24}"\]\.email = name2@example\.com$/);
         t.strictEqual(err.isUniqueConstraintViolation, true);
+        t.strictEquals(err.conflictKey, "name2@example.com");
+        t.type(err.constraintIndex, UniqueIndex);
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.users[1]);
         t.strictEqual(db.collections.robots.size, 4);
         t.strictEqual(db.collections.users.size, 2);
         var frank = db.collections.users[1];
@@ -173,6 +188,9 @@ test("update errors", suite => {
         t.type(err, UniqueConstraintViolationError);
         t.matches(err.message, /^unique constraint violated: users\["[0-9a-f]{24}"\]\.email = name2@example\.com$/);
         t.strictEqual(err.isUniqueConstraintViolation, true);
+        t.strictEquals(err.conflictKey, "name2@example.com");
+        t.type(err.constraintIndex, UniqueIndex);
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.users[1]);
         t.strictEqual(db.collections.robots.size, 4);
         t.strictEqual(db.collections.users.size, 2);
         var frank = db.collections.users[0];
@@ -198,7 +216,7 @@ test("update errors", suite => {
   });
 
   suite.test('update rejection event', t => {
-    t.plan(13);
+    t.plan(16);
     var db = new DB({schema: {
       things: {
         unique: {type: 'primitive', unique: true, required: true}
@@ -228,6 +246,9 @@ test("update errors", suite => {
               t.type(err, UniqueConstraintViolationError)
               t.matches(err.message, /^unique constraint violated: things\["[0-9a-f]{24}"\]\.unique = 1$/);
               t.strictEqual(err.isUniqueConstraintViolation, true);
+              t.strictEquals(err.conflictKey, 1);
+              t.type(err.constraintIndex, UniqueIndex);
+              t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.things[0]);
               t.strictEqual(db.collections.things.size, 1);
               t.strictEqual(db.collections.things[thingid]._id, thingid);
               t.strictEqual(db.collections.things[0]._id, thingid);

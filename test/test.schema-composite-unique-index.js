@@ -18,7 +18,7 @@ const { UniqueConstraintViolationError } = require('../lib/errors');
 test("DB", suite => {
 
   suite.test("should create database with composite unique index", t => {
-    t.plan(61+174);
+    t.plan(61+183);
     var db = new DB({schema: {
       test: {
         bool: {type: Boolean, unique: true},
@@ -146,6 +146,9 @@ test("DB", suite => {
     }).catch(err => {
       t.type(err, UniqueConstraintViolationError);
       t.matches(err.message, /unique constraint violated: test\["[0-9a-f]{24}"\].bool = true/);
+      t.strictEquals(err.conflictKey, true);
+      t.type(err.constraintIndex, UniqueIndex);
+      t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.test[itemid]);
       t.strictEquals(db.collections.test.size, 1);
       return db.collections.test.createAndSave({bool: false, multi: 'm', serial: 42, name: 'foo', time: new Date(2017,0,1)});
     }).then(item => {
@@ -182,6 +185,9 @@ test("DB", suite => {
     }).catch(err => {
       t.type(err, UniqueConstraintViolationError);
       t.strictEquals(err.message, `unique constraint violated: multi(42,m) test["${itemid}"].multi = m`);
+      t.strictSame(err.conflictKey, [42, "m"]);
+      t.type(err.constraintIndex, CompositeUniqueIndex);
+      t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.test[1]);
       t.strictEquals(db.collections.test.size, 2);
       var item = db.collections.test[itemid];
       t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: itemid, bool: true, serial: 42, name: 'foo'});
@@ -219,6 +225,9 @@ test("DB", suite => {
     }).catch(err => {
       t.type(err, UniqueConstraintViolationError);
       t.strictEquals(err.message, `unique constraint violated: duo(m,foo) test["${itemid}"].name = foo`);
+      t.strictSame(err.conflictKey, ["m", "foo"]);
+      t.type(err.constraintIndex, CompositeUniqueIndex);
+      t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.test[1]);
       t.strictEquals(db.collections.test.size, 2);
       var item = db.collections.test[itemid];
       t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: itemid, bool: true, serial: 77, multi: 'm', name: 'goo'});
@@ -352,7 +361,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with composite unique index over relations", t => {
-    t.plan(86 + 452);
+    t.plan(86 + 458);
     var db = new DB({schema: {
       foos: {
         bar: {hasOne: {collection: "bars", hasMany: "foos"}},
@@ -573,8 +582,11 @@ test("DB", suite => {
       }).catch(err => {
         t.type(err, UniqueConstraintViolationError);
         t.matches(err.message, /unique constraint violated: bargrip\([0-9a-f]{24},[0-9a-f]{24}\) foos\["[0-9a-f]{24}"\].barsome = [0-9a-f]{24}/);
-        t.strictEquals(db.collections.foos.size, 1);
+        t.strictSame(err.conflictKey, [bar1._id, bar3._id]);
+        t.type(err.constraintIndex, CompositeUniqueIndex);
         var item = db.collections.foos.first();
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), item);
+        t.strictEquals(db.collections.foos.size, 1);
         t.strictEquals(db.collections.foos.by.barattr.size, 1);
         t.strictEquals(db.collections.foos.by.barattr.count(), 1);
         t.strictEquals(db.collections.foos.by.barattr.first(), item);
@@ -687,6 +699,9 @@ test("DB", suite => {
       }).catch(err => {
         t.type(err, UniqueConstraintViolationError);
         t.matches(err.message, /unique constraint violated: barattr\([0-9a-f]{24},null\) foos\["[0-9a-f]{24}"\].attr = null/);
+        t.strictSame(err.conflictKey, [bars[0], null]);
+        t.type(err.constraintIndex, CompositeUniqueIndex);
+        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.foos[1]);
         t.strictEquals(db.collections.foos.size, 2);
         t.strictEquals(db.collections.bars.size, 3);
         var item = db.collections.foos[0];
