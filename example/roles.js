@@ -11,7 +11,8 @@ module.exports = function(schemaOnly) {
     roles: {
       role: {type: 'enum', index: true, required: true, enum: ['owner', 'admin', 'guest']},
       group: {hasOne: {collection: 'groups', hasMany: 'roles'}},
-      users: {hasMany: {collection: 'users', hasMany: 'roles'}}
+      users: {hasMany: {collection: 'users', hasMany: 'roles'}},
+      rolesGroups: {unique: true, components: ['role', 'group']}
     },
     users: {
       createdAt: {type: Date, required: true, default: Date.now},
