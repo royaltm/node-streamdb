@@ -181,7 +181,7 @@ test("DB", suite => {
       return db.save();
     }).catch(err => {
       t.type(err, UniqueConstraintViolationError);
-      t.strictEquals(err.message, `unique constraint violated: (multi) test["${itemid}"].multi = m`);
+      t.strictEquals(err.message, `unique constraint violated: multi(42,m) test["${itemid}"].multi = m`);
       t.strictEquals(db.collections.test.size, 2);
       var item = db.collections.test[itemid];
       t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: itemid, bool: true, serial: 42, name: 'foo'});
@@ -218,7 +218,7 @@ test("DB", suite => {
       return db.save();
     }).catch(err => {
       t.type(err, UniqueConstraintViolationError);
-      t.strictEquals(err.message, `unique constraint violated: (duo) test["${itemid}"].name = foo`);
+      t.strictEquals(err.message, `unique constraint violated: duo(m,foo) test["${itemid}"].name = foo`);
       t.strictEquals(db.collections.test.size, 2);
       var item = db.collections.test[itemid];
       t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: itemid, bool: true, serial: 77, multi: 'm', name: 'goo'});
@@ -572,7 +572,7 @@ test("DB", suite => {
         return db.collections.foos.createAndSave({bar: bar1, attr: null, barsome: bar3});
       }).catch(err => {
         t.type(err, UniqueConstraintViolationError);
-        t.matches(err.message, /unique constraint violated: \(bargrip\) foos\["[0-9a-f]{24}"\].barsome = [0-9a-f]{24}/);
+        t.matches(err.message, /unique constraint violated: bargrip\([0-9a-f]{24},[0-9a-f]{24}\) foos\["[0-9a-f]{24}"\].barsome = [0-9a-f]{24}/);
         t.strictEquals(db.collections.foos.size, 1);
         var item = db.collections.foos.first();
         t.strictEquals(db.collections.foos.by.barattr.size, 1);
@@ -686,7 +686,7 @@ test("DB", suite => {
         return db.save();
       }).catch(err => {
         t.type(err, UniqueConstraintViolationError);
-        t.matches(err.message, /unique constraint violated: \(barattr\) foos\["[0-9a-f]{24}"\].attr = null/);
+        t.matches(err.message, /unique constraint violated: barattr\([0-9a-f]{24},null\) foos\["[0-9a-f]{24}"\].attr = null/);
         t.strictEquals(db.collections.foos.size, 2);
         t.strictEquals(db.collections.bars.size, 3);
         var item = db.collections.foos[0];
