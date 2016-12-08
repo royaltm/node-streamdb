@@ -57,15 +57,6 @@ or `[...iter]` or call one of the execution methods which performs additional ta
 - `slices(size)`
   yields items as array slices of a given maximum size
 
-- `sorted(comparator)`
-  sorts items with a `comparator(a, b) => -1|0|1` and returns iterator
-
-- `sortedBy(fields[, direction])`
-  sorts items by `fields` and `direction` order and returns iterator
-  `fields` may be a single field name or an array of field names
-  or an array of tuples `[field, direction]`
-  specify `direction` as `"desc"` or `-1` for descendant order
-
 - `tail()`
   a sugar for drop(1)
 
@@ -139,6 +130,15 @@ Execution methods:
   `fields` may be a single field name or an array of field names
   or an array of tuples `[field, direction]`
   specify `direction` as "desc" or -1 for descendant order
+
+- `sorted(comparator)`
+  sorts items with a `comparator(a, b) => -1|0|1` and returns iterator
+
+- `sortedBy(fields[, direction])`
+  sorts items by `fields` and `direction` order and returns iterator
+  `fields` may be a single field name or an array of field names
+  or an array of tuples `[field, direction]`
+  specify `direction` as `"desc"` or `-1` for descendant order
 
 - `top(n)`
   collects iterator items at most `n` times, returns an Array;
