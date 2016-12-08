@@ -98,12 +98,35 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'xxx', hasMany:'foos', hasOne: 'foo'}}}}}), new SchemaSyntaxError("hasMany relation forbids hasOne foreign property in foo:bars"));
     t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'xxx', hasMany:''}}}}}), new SchemaSyntaxError("hasMany foreign property name must be a non empty string in foo:bars"));
     t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'xxx', hasMany:null}}}}}), new SchemaSyntaxError("hasMany foreign property name must be a non empty string in foo:bars"));
+    t.throws(() => new DB({schema: {foo: {bar: 'enum'}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'Enum'}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: ""}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: {}}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: []}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [0]}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [undefined]}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [null]}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'blob', encoding: null}}}}), new SchemaSyntaxError("Blob datatype encoding parameter needs to be a proper encoding name"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'blob', encoding: "foo"}}}}), new SchemaSyntaxError("Blob datatype encoding parameter needs to be a proper encoding name"));
+    t.end();
+  });
+
+  suite.test('property default value errors', t => {
+    t.throws(() => new DB({schema: {foo: {bar: {hasOne: 'bar', default: null}}}}), new SchemaSyntaxError("property default value is not allowed for a relation in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: {hasOne: {collection: 'bars', hasOne: 'foo'}, default: null}}}}), new SchemaSyntaxError("property default value is not allowed for a relation in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: {hasOne: {collection: 'bars', hasMany: 'foos'}, default: null}}}}), new SchemaSyntaxError("property default value is not allowed for a relation in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'bars', hasMany: 'foos'}, default: null}}}}), new SchemaSyntaxError("property default value is not allowed for a relation in foo:bars"));
+    t.throws(() => new DB({schema: {foo: {bars: {default: {} }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
+    t.throws(() => new DB({schema: {foo: {bars: {default: [] }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
+    t.throws(() => new DB({schema: {foo: {bars: {default: new Date() }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
     t.end();
   });
 
   suite.test('forbidden indexed types', t => {
-    t.throws(() => new DB({schema: {foo: {bar: {type: Date, unique: true}}}}), new SchemaSyntaxError("unimplemented: unique index on Date type property in foo:bar"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: Date, index: true}}}}), new SchemaSyntaxError("unimplemented: index on Date type property in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'Date', unique: true}}}}), new SchemaSyntaxError("unimplemented: unique index on Date type property in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'Date', index: true}}}}), new SchemaSyntaxError("unimplemented: index on Date type property in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'Blob', unique: true}}}}), new SchemaSyntaxError("unimplemented: unique index on Blob type property in foo:bar"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'Blob', index: true}}}}), new SchemaSyntaxError("unimplemented: index on Blob type property in foo:bar"));
     t.end();
   });
 
@@ -124,6 +147,7 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {foos: {'bar': {unique: true, components: ['___','y']}}}}), new SchemaSyntaxError('collection property name must not start with "__": foos:___'));
     t.throws(() => new DB({schema: {foos: {'bar': {unique: true, components: ['toJSON','y']}}}}), new SchemaSyntaxError("reserved collection property name: foos:toJSON"));
     t.throws(() => new DB({schema: {foos: {'x': Date, 'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
+    t.throws(() => new DB({schema: {foos: {'x': 'blob', 'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
     t.throws(() => new DB({schema: {foos: {'x': {hasMany: {collection: 'bars', hasMany: 'foos'}}, 'bar': {unique: true, components: ['x','y']}}}}), new SchemaSyntaxError("non-indexable property: foos:x"));
     t.throws(() => new DB({schema: {
         foos: {'bar': {unique: true, components: ['x','y']}},
