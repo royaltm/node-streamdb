@@ -67,7 +67,6 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {foo: {bar: {type: Object}}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {type: []}}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {type: 0}}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: null}}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {type: undefined}}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {type: true}}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {type: false}}}}), new SchemaSyntaxError("invalid schema type, hasMany or hasOne for foo:bar"));
@@ -98,16 +97,16 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'xxx', hasMany:'foos', hasOne: 'foo'}}}}}), new SchemaSyntaxError("hasMany relation forbids hasOne foreign property in foo:bars"));
     t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'xxx', hasMany:''}}}}}), new SchemaSyntaxError("hasMany foreign property name must be a non empty string in foo:bars"));
     t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'xxx', hasMany:null}}}}}), new SchemaSyntaxError("hasMany foreign property name must be a non empty string in foo:bars"));
-    t.throws(() => new DB({schema: {foo: {bar: 'enum'}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'Enum'}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: ""}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: {}}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: []}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [0]}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [undefined]}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [null]}}}}), new SchemaSyntaxError("Enum datatype requires array of non empty strings in schema enum property"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'blob', encoding: null}}}}), new SchemaSyntaxError("Blob datatype encoding parameter needs to be a proper encoding name"));
-    t.throws(() => new DB({schema: {foo: {bar: {type: 'blob', encoding: "foo"}}}}), new SchemaSyntaxError("Blob datatype encoding parameter needs to be a proper encoding name"));
+    t.throws(() => new DB({schema: {foo: {bar: 'enum'}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'Enum'}}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: ""}}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: {}}}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: []}}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [0]}}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [undefined]}}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'enum', enum: [null]}}}}), new SchemaSyntaxError("bar: Enum datatype requires array of non empty strings in enum schema property"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'blob', encoding: null}}}}), new SchemaSyntaxError("bar: Blob datatype encoding schema property needs to be a proper encoding name"));
+    t.throws(() => new DB({schema: {foo: {bar: {type: 'blob', encoding: "foo"}}}}), new SchemaSyntaxError("bar: Blob datatype encoding schema property needs to be a proper encoding name"));
     t.end();
   });
 
@@ -116,9 +115,9 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {foo: {bar: {hasOne: {collection: 'bars', hasOne: 'foo'}, default: null}}}}), new SchemaSyntaxError("property default value is not allowed for a relation in foo:bar"));
     t.throws(() => new DB({schema: {foo: {bar: {hasOne: {collection: 'bars', hasMany: 'foos'}, default: null}}}}), new SchemaSyntaxError("property default value is not allowed for a relation in foo:bar"));
     t.throws(() => new DB({schema: {foo: {bars: {hasMany: {collection: 'bars', hasMany: 'foos'}, default: null}}}}), new SchemaSyntaxError("property default value is not allowed for a relation in foo:bars"));
-    t.throws(() => new DB({schema: {foo: {bars: {default: {} }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
-    t.throws(() => new DB({schema: {foo: {bars: {default: [] }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
-    t.throws(() => new DB({schema: {foo: {bars: {default: new Date() }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
+    t.throws(() => new DB({schema: {foo: {bars: {type: null, default: {} }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
+    t.throws(() => new DB({schema: {foo: {bars: {type: '*', default: [] }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
+    t.throws(() => new DB({schema: {foo: {bars: {type: 'date', default: new Date() }}}}), new SchemaSyntaxError("property default value must be a function or a scalar in foo:bars"));
     t.end();
   });
 

@@ -209,7 +209,7 @@ test("DB", suite => {
       "default": "bar"
     });
     t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].blob), 
-      ['name', 'default', 'required', 'type', 'prop']);
+      ['name', 'required', 'type', 'default', 'prop']);
     t.strictEquals(db.collections.test[Symbol.for('schema')].blob.name, "blob");
     t.strictEquals(db.collections.test[Symbol.for('schema')].blob.prop, "blob");
     t.strictEquals(db.collections.test[Symbol.for('schema')].blob.required, false);
@@ -285,7 +285,7 @@ test("DB", suite => {
       "type": Boolean,
     });
     t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].time),
-      ['name', 'default', 'required', 'type', 'readPropertySymbol', 'prop']);
+      ['name', 'required', 'type', 'default', 'readPropertySymbol', 'prop']);
     t.strictEquals(db.collections.test[Symbol.for('schema')].time.name, 'time');
     t.strictEquals(db.collections.test[Symbol.for('schema')].time.required, false);
     t.strictEquals(db.collections.test[Symbol.for('schema')].time.type, Date);
@@ -319,7 +319,7 @@ test("DB", suite => {
         item.other.nested.flag = false;
         item.unschemed = "rarara";
         t.throws(() => { item.blob = "foo"; }, new TypeError('Invalid hex string'));
-        t.throws(() => { item.blob = null; }, new TypeError('blob: property needs to be a buffer or a string'));
+        t.throws(() => { item.blob = null; }, new TypeError('blob: property needs to be a buffer or a properly encoded string'));
         t.throws(() => { item.other.nested.flag = null; }, new TypeError('other.nested.flag: property needs to be a boolean'));
         return db.save();
       })
