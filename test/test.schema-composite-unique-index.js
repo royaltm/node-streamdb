@@ -5,11 +5,9 @@ const test = require('tap').test;
 const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 
-const $this = Symbol.for('this');
-const $itemKlass = require('../lib/collection/schema').itemKlassSym;
-const isIdent = require('../lib/id').isIdent;
+const { thisSym: this$ } = require('../lib/collection/symbols');
+
 const Primitive = require('../lib/collection/schema/types').primitive;
-const Enum = require('../lib/collection/schema/types').enum;
 
 const { UniqueIndex, MultiValueIndex, CompositeUniqueIndex } = require('../lib/collection/indexes');
 
@@ -403,7 +401,7 @@ test("DB", suite => {
     t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.name, 'bar');
     t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.required, false);
     t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[Symbol.for("this")]);
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
     t.type(db.collections.foos[Symbol.for('schema')].bar.klass.prototype, Item);
     t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.foreign, 'foos');
     t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
@@ -419,7 +417,7 @@ test("DB", suite => {
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barone.name, 'barone');
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barone.required, false);
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barone.type, "bars");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].barone.collection, db.collections.bars[Symbol.for("this")]);
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].barone.collection, db.collections.bars[this$]);
     t.type(db.collections.foos[Symbol.for('schema')].barone.klass.prototype, Item);
     t.strictSame(db.collections.foos[Symbol.for('schema')].barone.unique, new UniqueIndex());
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barone.foreign, 'foo');
@@ -436,7 +434,7 @@ test("DB", suite => {
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barsome.name, 'barsome');
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barsome.required, false);
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barsome.type, "bars");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].barsome.collection, db.collections.bars[Symbol.for("this")]);
+    t.strictEquals(db.collections.foos[Symbol.for('schema')].barsome.collection, db.collections.bars[this$]);
     t.type(db.collections.foos[Symbol.for('schema')].barsome.klass.prototype, Item);
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barsome.hasOne, true);
     t.strictEquals(db.collections.foos[Symbol.for('schema')].barsome.prop, 'barsome');
@@ -472,7 +470,7 @@ test("DB", suite => {
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.prop, "foos");
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.required, false);
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.type, "foos");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.collection, db.collections.foos[Symbol.for("this")]);
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.collection, db.collections.foos[this$]);
     t.type(db.collections.bars[Symbol.for('schema')].foos.klass.prototype, Item);
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.primary, "bar");
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.hasMany, true);
@@ -486,7 +484,7 @@ test("DB", suite => {
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.prop, "foo");
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.required, false);
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.type, "foos");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.collection, db.collections.foos[Symbol.for("this")]);
+    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.collection, db.collections.foos[this$]);
     t.type(db.collections.bars[Symbol.for('schema')].foo.klass.prototype, Item);
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.primary, "barone");
     t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.hasMany, false);

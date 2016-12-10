@@ -9,7 +9,7 @@ const Item = require('../lib/collection/item').Item;
 test("DB", suite => {
 
   suite.test("should create database with custom models", t => {
-    t.plan(24);
+    t.plan(29);
 
     class Person extends Item {
       constructor() {
@@ -81,6 +81,11 @@ test("DB", suite => {
         t.strictEquals(person.name, 'STEFAN');
         t.strictEquals(person.private, 'private');
         t.strictEquals(person.hasName, true);
+        t.strictEquals(person[Symbol.for('foo')], undefined);
+        t.strictEquals(person[Symbol.for('foo')] = 'foo', 'foo');
+        t.strictEquals(person[Symbol.for('foo')], 'foo');
+        t.strictEquals(delete person[Symbol.for('foo')], true);
+        t.strictEquals(person[Symbol.for('foo')], undefined);
         var dog = db.collections.animals[animalId];
         t.type(dog, Item);
         t.deepEqual(dog.toJSON(), {_id: dog._id, type: 'dog', hungry: false, voice: "whoof"});
