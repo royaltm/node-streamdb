@@ -46,14 +46,14 @@ test("DB", suite => {
     });
     t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].time),
       ['name', 'required', 'type', 'readPropertySymbol', 'prop']);
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.name, 'time');
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.required, false);
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.type, Date);
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.prop, 'time');
-    t.notStrictEquals(db.collections.test[Symbol.for('schema')].time.readPropertySymbol,
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.name, 'time');
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.required, false);
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.type, Date);
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.prop, 'time');
+    t.notStrictEqual(db.collections.test[Symbol.for('schema')].time.readPropertySymbol,
       db.collections.test[Symbol.for('schema')].time.writePropertySymbol);
     t.type(db.collections.test[Symbol.for('schema')].time.readPropertySymbol, 'symbol');
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.writePropertySymbol, undefined);
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.writePropertySymbol, undefined);
     t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested.count'], {
       name: 'other.nested.count',
       required: false,
@@ -294,12 +294,12 @@ test("DB", suite => {
     });
     t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].blob), 
       ['name', 'required', 'type', 'default', 'prop']);
-    t.strictEquals(db.collections.test[Symbol.for('schema')].blob.name, "blob");
-    t.strictEquals(db.collections.test[Symbol.for('schema')].blob.prop, "blob");
-    t.strictEquals(db.collections.test[Symbol.for('schema')].blob.required, false);
+    t.strictEqual(db.collections.test[Symbol.for('schema')].blob.name, "blob");
+    t.strictEqual(db.collections.test[Symbol.for('schema')].blob.prop, "blob");
+    t.strictEqual(db.collections.test[Symbol.for('schema')].blob.required, false);
     t.strictSame(db.collections.test[Symbol.for('schema')].blob.type, new Blob({encoding: "hex"}));
     t.type(db.collections.test[Symbol.for('schema')].blob.default, 'function');
-    t.strictEquals(db.collections.test[Symbol.for('schema')].blob.default.toString(), '() => Buffer.alloc(0)');
+    t.strictEqual(db.collections.test[Symbol.for('schema')].blob.default.toString(), '() => Buffer.alloc(0)');
     t.strictSame(db.collections.test[Symbol.for('schema')].scal, {
       "name": "scal",
       "prop": "scal",
@@ -370,14 +370,14 @@ test("DB", suite => {
     });
     t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].time),
       ['name', 'required', 'type', 'default', 'readPropertySymbol', 'prop']);
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.name, 'time');
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.required, false);
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.type, Date);
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.prop, 'time');
-    t.notStrictEquals(db.collections.test[Symbol.for('schema')].time.readPropertySymbol,
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.name, 'time');
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.required, false);
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.type, Date);
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.prop, 'time');
+    t.notStrictEqual(db.collections.test[Symbol.for('schema')].time.readPropertySymbol,
       db.collections.test[Symbol.for('schema')].time.writePropertySymbol);
     t.type(db.collections.test[Symbol.for('schema')].time.readPropertySymbol, 'symbol');
-    t.strictEquals(db.collections.test[Symbol.for('schema')].time.writePropertySymbol, undefined);
+    t.strictEqual(db.collections.test[Symbol.for('schema')].time.writePropertySymbol, undefined);
 
     t.type(db, DB);
 
@@ -558,13 +558,13 @@ test("DB", suite => {
     });
     t.strictSame(Object.getOwnPropertyNames(db.collections.foos[Symbol.for('schema')].bar),
       ['name', 'required', 'type', 'collection', 'klass', 'hasOne', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.required, false);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.required, false);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
     t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
     t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, 'symbol');
 

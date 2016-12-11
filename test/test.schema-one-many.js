@@ -42,14 +42,14 @@ test("DB", suite => {
       "required": false,
       "type": new Primitive()
     });
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.required, false);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.foreign, "foos");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.required, false);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.foreign, "foos");
     t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
     t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, 'symbol');
 
@@ -61,15 +61,15 @@ test("DB", suite => {
       "required": false,
       "type": Number
     });
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.name, "foos");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.prop, "foos");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.type, "foos");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.collection, db.collections.foos[this$]);
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.klass, db.collections.foos[this$][itemKlass$]);
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.primary, "bar");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.hasMany, true);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.name, "foos");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.prop, "foos");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.type, "foos");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.collection, db.collections.foos[this$]);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.klass, db.collections.foos[this$][itemKlass$]);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.primary, "bar");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.hasMany, true);
     t.type(db.collections.bars[Symbol.for('schema')].foos.readPropertySymbol, 'symbol');
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foos.writePropertySymbol, undefined);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foos.writePropertySymbol, undefined);
 
     t.strictEqual(db.collections.foos.size, 0);
     t.strictEqual(db.collections.bars.size, 0);

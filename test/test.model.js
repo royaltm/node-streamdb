@@ -78,20 +78,20 @@ test("DB", suite => {
         t.type(person, Item);
         t.type(person, Person);
         t.deepEqual(person.toJSON(), {_id: person._id, name: 'STEFAN', private: 'private'})
-        t.strictEquals(person.name, 'STEFAN');
-        t.strictEquals(person.private, 'private');
-        t.strictEquals(person.hasName, true);
-        t.strictEquals(person[Symbol.for('foo')], undefined);
-        t.strictEquals(person[Symbol.for('foo')] = 'foo', 'foo');
-        t.strictEquals(person[Symbol.for('foo')], 'foo');
-        t.strictEquals(delete person[Symbol.for('foo')], true);
-        t.strictEquals(person[Symbol.for('foo')], undefined);
+        t.strictEqual(person.name, 'STEFAN');
+        t.strictEqual(person.private, 'private');
+        t.strictEqual(person.hasName, true);
+        t.strictEqual(person[Symbol.for('foo')], undefined);
+        t.strictEqual(person[Symbol.for('foo')] = 'foo', 'foo');
+        t.strictEqual(person[Symbol.for('foo')], 'foo');
+        t.strictEqual(delete person[Symbol.for('foo')], true);
+        t.strictEqual(person[Symbol.for('foo')], undefined);
         var dog = db.collections.animals[animalId];
         t.type(dog, Item);
         t.deepEqual(dog.toJSON(), {_id: dog._id, type: 'dog', hungry: false, voice: "whoof"});
-        t.strictEquals(dog.type, 'dog');
-        t.strictEquals(dog.hungry, false);
-        t.strictEquals(dog.voice, "whoof");
+        t.strictEqual(dog.type, 'dog');
+        t.strictEqual(dog.hungry, false);
+        t.strictEqual(dog.voice, "whoof");
 
         dog.hungry = true;
         dog.type = 'cat';
@@ -102,15 +102,15 @@ test("DB", suite => {
         t.type(person, Item);
         t.type(person, Person);
         t.deepEqual(person.toJSON(), {_id: person._id, private: 'private'})
-        t.strictEquals(person.name, undefined);
-        t.strictEquals(person.private, 'private');
-        t.strictEquals(person.hasName, false);
+        t.strictEqual(person.name, undefined);
+        t.strictEqual(person.private, 'private');
+        t.strictEqual(person.hasName, false);
         var cat = db.collections.animals[animalId];
         t.type(cat, Item);
         t.deepEqual(cat.toJSON(), {_id: cat._id, type: 'cat', hungry: true, voice: "MEOW"});
-        t.strictEquals(cat.type, 'cat');
-        t.strictEquals(cat.hungry, true);
-        t.strictEquals(cat.voice, "MEOW");
+        t.strictEqual(cat.type, 'cat');
+        t.strictEqual(cat.hungry, true);
+        t.strictEqual(cat.voice, "MEOW");
       });
     }).catch(t.threw);
   });

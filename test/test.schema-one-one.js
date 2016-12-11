@@ -48,15 +48,15 @@ test("DB", suite => {
       "required": false,
       "type": new Primitive()
     });
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.required, false);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.required, false);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
     t.type(db.collections.foos[Symbol.for('schema')].bar.unique, Map);
-    t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.foreign, "foo");
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.foreign, "foo");
     t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
     t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, 'symbol');
 
@@ -68,15 +68,15 @@ test("DB", suite => {
       "required": false,
       "type": Number
     });
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.name, "foo");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.prop, "foo");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.type, "foos");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.collection, db.collections.foos[this$]);
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.klass, db.collections.foos[this$][itemKlass$]);
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.primary, "bar");
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.hasMany, false);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.name, "foo");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.prop, "foo");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.type, "foos");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.collection, db.collections.foos[this$]);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.klass, db.collections.foos[this$][itemKlass$]);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.primary, "bar");
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.hasMany, false);
     t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
-    t.strictEquals(db.collections.bars[Symbol.for('schema')].foo.writePropertySymbol, undefined);
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.writePropertySymbol, undefined);
 
     t.strictEqual(db.collections.foos.size, 0);
     t.strictEqual(db.collections.bars.size, 0);
@@ -106,9 +106,9 @@ test("DB", suite => {
       .catch(err => {
         t.type(err, UniqueConstraintViolationError);
         t.strictEqual(err.message, `unique constraint violated: foos["${fooid}"].bar = ${barid}`);
-        t.strictEquals(err.conflictKey, barid);
+        t.strictEqual(err.conflictKey, barid);
         t.type(err.constraintIndex, UniqueIndex);
-        t.strictEquals(err.constraintIndex.get(err.conflictKey), db.collections.foos[0]);
+        t.strictEqual(err.constraintIndex.get(err.conflictKey), db.collections.foos[0]);
         var bar = db.collections.bars[barid];
         fooid = bar.foo._id;
         t.ok(isIdent(fooid));
