@@ -53,18 +53,20 @@ test("DB", suite => {
   });
 
   suite.test('should emit error on uncompatible version from stream', t => {
-    t.plan(30);
+    t.plan(33);
     var syncStream = new PassThrough({objectMode: true});
 
     var db = new DB({schema: {_version: '2.1.5'}});
     t.strictEqual(db.schemaVersion.version, '2.1.5');
     t.strictSame(db.schemaVersion, {major: 2, minor: 1, patch: 5, version: '2.1.5'});
+    t.strictEqual(db.readonly, false);
 
     syncStream.pipe(db.stream);
 
     var db2 = new DB({schema: {_version: '1.1.5'}});
     t.strictEqual(db2.schemaVersion.version, '1.1.5');
     t.strictSame(db2.schemaVersion, {major: 1, minor: 1, patch: 5, version: '1.1.5'});
+    t.strictEqual(db2.readonly, false);
     db2.stream.pipe(syncStream).pipe(db2.stream);
     return db2.writable.then(db2 => {
       var promise = Promise.all([
@@ -96,6 +98,7 @@ test("DB", suite => {
       var db3 = new DB({schema: {_version: '2.2.5'}});
       t.strictEqual(db3.schemaVersion.version, '2.2.5');
       t.strictSame(db3.schemaVersion, {major: 2, minor: 2, patch: 5, version: '2.2.5'});
+      t.strictEqual(db3.readonly, false);
 
       db3.stream.pipe(syncStream).pipe(db3.stream);
       return db3.writable;
@@ -239,6 +242,54 @@ test("DB", suite => {
       t.strictEqual(db.collections.foos.by.name.size, 1);
       t.strictEqual(db._spool, undefined);
       t.strictEqual(db._lastIdent, undefined);
+    }).catch(t.threw);
+  });
+
+  suite.test('should create read-only database', t => {
+    t.plan(4);
+
+    var db = new DB({readonly: true});
+    t.strictEqual(db.readonly, true);
+    t.throws(() => db.collections.test.create({}), new Error("DB: no updates are allowed: database is in read-only mode"));
+
+    db.stream.pipe(db.stream);
+    return db.writable.then(db => {
+      return db.collections.test.createAndSave({});
+    }).catch(err => {
+      t.type(err, Error);
+      t.strictEqual(err.message, "DB: no updates are allowed: database is in read-only mode");
+    }).catch(t.threw);
+  });
+
+  suite.test('should create read-only database', t => {
+    t.plan(18);
+
+    var db = new DB({readonly: false});
+    t.strictEqual(db.readonly, false);
+
+    db.stream.pipe(db.stream);
+    return db.writable.then(db => {
+      return db.collections.test.createAndSave({});
+    }).then(item => {
+      t.type(item, Item);
+      t.strictEqual(db.makeReadonly(), true);
+      t.strictEqual(db.readonly, true);
+      t.strictEqual(db.makeReadonly(), false);
+      t.strictEqual(db.readonly, true);
+      t.throws(() => db.collections.test.create({}), new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => { item.foo = null; }, new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => { delete item.foo; }, new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => { delete db.collections.test[item._id]; }, new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => { delete db.collections.test; }, new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => db.collections.test.replace(item, {}), new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => db.collections.test.update(item, {foo: 1}), new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => db.collections.test.update(item, {foo: undefined}), new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => db.collections.test.add(item, 'foo', 1), new Error("DB: no updates are allowed: database is in read-only mode"));
+      t.throws(() => db.collections.test.pull(item, 'foo', 1), new Error("DB: no updates are allowed: database is in read-only mode"));
+      return db.collections.test.updateAndSave(item, {foo: 1});
+    }).catch(err => {
+      t.type(err, Error);
+      t.strictEqual(err.message, "DB: no updates are allowed: database is in read-only mode");
     }).catch(t.threw);
   });
 
