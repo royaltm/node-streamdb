@@ -261,7 +261,7 @@ test("DB", suite => {
     }).catch(t.threw);
   });
 
-  suite.test('should create read-only database', t => {
+  suite.test('should make read-only database', t => {
     t.plan(18);
 
     var db = new DB({readonly: false});
