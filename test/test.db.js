@@ -6,9 +6,31 @@ const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 const Collection = require('../lib/collection').Collection;
 const Ident = require('../lib/id').Ident;
-const { VersionError } = require('../lib/errors');
+const errors = require('../lib/errors');
+const { VersionError } = errors;
+const itertools = require('../lib/iter');
 
 test("DB", suite => {
+
+  suite.type(DB, 'function');
+
+  suite.test('should have static properties', t => {
+    t.type(DB.Item, 'function');
+    t.strictEqual(DB.Item, Item);
+    t.type(DB.Item.this, 'symbol');
+    t.type(DB.itertools, Object);
+    t.strictEqual(DB.itertools, itertools);
+    t.type(DB.VersionError, 'function')
+    t.type(DB.VersionError.prototype, Error);
+    t.strictEqual(DB.VersionError, errors.VersionError)
+    t.type(DB.SchemaSyntaxError, 'function')
+    t.type(DB.SchemaSyntaxError.prototype, Error);
+    t.strictEqual(DB.SchemaSyntaxError, errors.SchemaSyntaxError)
+    t.type(DB.UniqueConstraintViolationError, 'function')
+    t.type(DB.UniqueConstraintViolationError.prototype, Error);
+    t.strictEqual(DB.UniqueConstraintViolationError, errors.UniqueConstraintViolationError);
+    t.end();
+  });
 
   suite.test('should throw error on mingled version syntax', t => {
     t.throws(() => new DB({schema: {_version: null}})), new VersionError('Could not read schema version: null');
