@@ -16,13 +16,13 @@ const Blob = require('../lib/collection/schema/types').blob;
 test("DB", suite => {
 
   suite.test("should create database with type constraint schema", t => {
-    t.plan(18+34+2);
+    t.plan(18+57+2);
     var db = new DB({schema: {
       test: {
         name: String,
         time: Date,
         'other.nested.count': Number,
-        'other.nested.flag': Boolean
+        'other.nested.flag': {type: Boolean, required: true}
       }
     }});
 
@@ -32,7 +32,7 @@ test("DB", suite => {
         name: {type: String},
         time: {type: Date},
         'other.nested.count': {type: Number},
-        'other.nested.flag': {type: Boolean}
+        'other.nested.flag': {type: Boolean, required: true}
       }
     });
 
@@ -74,12 +74,12 @@ test("DB", suite => {
               prop: 'count' },
           flag:
             { name: 'other.nested.flag',
-              required: false,
+              required: true,
               type: Boolean,
               prop: 'flag' } },
       'nested.flag':
         { name: 'other.nested.flag',
-          required: false,
+          required: true,
           type: Boolean,
           prop: 'nested.flag' }
     });
@@ -91,13 +91,13 @@ test("DB", suite => {
         prop: 'count' },
       flag:
       { name: 'other.nested.flag',
-        required: false,
+        required: true,
         type: Boolean,
         prop: 'flag' }
     });
     t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested.flag'], {
       name: 'other.nested.flag',
-      required: false,
+      required: true,
       type: Boolean,
       prop: 'other.nested.flag'
     });
@@ -109,61 +109,84 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
-        t.throws(() => { item.name = 123; }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = []; }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = {}; }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = Symbol("asd"); }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = true; }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = false; }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = null; }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = NaN; }, new TypeError("name: property needs to be a string"));
-        t.throws(() => { item.name = new Date; }, new TypeError("name: property needs to be a string"));
+        t.throws(() => { item.name = 123; }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = []; }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = {}; }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = Symbol("asd"); }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = true; }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = false; }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = null; }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = NaN; }, new TypeError("test[].name: property needs to be a string"));
+        t.throws(() => { item.name = new Date; }, new TypeError("test[].name: property needs to be a string"));
         delete item.name;
-        t.throws(() => { item.time = ""; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = "foo"; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = []; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = {}; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = Symbol("asd"); }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = true; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = false; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = NaN; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
-        t.throws(() => { item.time = null; }, new TypeError("time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = ""; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = "foo"; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = []; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = {}; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = Symbol("asd"); }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = true; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = false; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = NaN; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
+        t.throws(() => { item.time = null; }, new TypeError("test[].time: property needs to be a date or a primitive convertible to a date"));
         delete item.time;
-        t.throws(() => { item.other.nested.count = ""; }, new TypeError("other.nested.count: property needs to be a number"));
-        t.throws(() => { item.other.nested.count = []; }, new TypeError("other.nested.count: property needs to be a number"));
-        t.throws(() => { item.other.nested.count = {}; }, new TypeError("other.nested.count: property needs to be a number"));
-        t.throws(() => { item.other.nested.count = Symbol("asd"); }, new TypeError("other.nested.count: property needs to be a number"));
-        t.throws(() => { item.other.nested.count = true; }, new TypeError("other.nested.count: property needs to be a number"));
-        t.throws(() => { item.other.nested.count = false; }, new TypeError("other.nested.count: property needs to be a number"));
-        t.throws(() => { item.other.nested.count = null; }, new TypeError("other.nested.count: property needs to be a number"));
-        t.throws(() => { item.other.nested.count = new Date; }, new TypeError("other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = ""; }, new TypeError("test[].other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = []; }, new TypeError("test[].other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = {}; }, new TypeError("test[].other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = Symbol("asd"); }, new TypeError("test[].other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = true; }, new TypeError("test[].other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = false; }, new TypeError("test[].other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = null; }, new TypeError("test[].other.nested.count: property needs to be a number"));
+        t.throws(() => { item.other.nested.count = new Date; }, new TypeError("test[].other.nested.count: property needs to be a number"));
         delete item.other.nested.count;
-        t.throws(() => { item.other.nested.flag = ""; }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        t.throws(() => { item.other.nested.flag = []; }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        t.throws(() => { item.other.nested.flag = {}; }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        t.throws(() => { item.other.nested.flag = Symbol("asd"); }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        t.throws(() => { item.other.nested.flag = NaN; }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        t.throws(() => { item.other.nested.flag = 0; }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        t.throws(() => { item.other.nested.flag = null; }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        t.throws(() => { item.other.nested.flag = new Date; }, new TypeError("other.nested.flag: property needs to be a boolean"));
-        delete item.other.nested.flag;
+        t.throws(() => { item.other.nested.flag = ""; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = []; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = {}; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = Symbol("asd"); }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = NaN; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = 0; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = new Date; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = null; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested = {flag: null}; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other = {nested: {flag: null}}; }, new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => db.collections.test.replace(item, {other:{nested:{flag: null}}}), new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => db.collections.test.update(item, {other:{nested:{flag: null}}}), new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => db.collections.test.update(item, {'other.nested.flag': null}), new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => db.collections.test.update(item, {'other.nested': {flag: null}}), new TypeError("test[].other.nested.flag: property needs to be a boolean"));
+        t.throws(() => { item.other.nested.flag = undefined; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { delete item.other.nested.flag; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { item.other.nested = undefined; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { delete item.other.nested; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { item.other = undefined; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { delete item.other; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { item.other.nested = {flag: undefined}; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { item.other = {nested: {flag: undefined}}; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => { item.other = {nested: undefined}; }, new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.replace(item, {}), new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.replace(item, {other:{}}), new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.replace(item, {other:{nested:{}}}), new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.replace(item, {other:{nested:{flag: undefined}}}), new TypeError("test[].other.nested.flag: property is required"));
+        db.collections.test.update(item, {}); /* no op */
+        t.throws(() => db.collections.test.update(item, {other:{}}), new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.update(item, {other:{nested:{}}}), new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.update(item, {'other.nested.flag': undefined}), new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.update(item, {'other.nested': {flag: undefined}}), new TypeError("test[].other.nested.flag: property is required"));
         return db.save();
       })
       .then(item => {
         t.type(item, Item)
-        t.deepEqual(item.toJSON(), {_id: item._id, other: {nested: {}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, other: {nested: {flag: true}}});
       });
     }).catch(t.threw);
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(61);
+    t.plan(99);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
         enum: {type: "enum", enum: ["foo", "bar"], default: "bar"},
         blob: {type: "blob", encoding: "hex", default: {function: 'Buffer.alloc(0)'}},
-        scal: { type: 'primitive', required: true},
+        scal: {type: 'primitive', required: true},
         time: {type: "date", default: () => new Date(2016,6,12,20,42)},
         'other.nested.count': {type: "number", default: 10},
         'other.nested.flag': {type: "boolean", default: true}
@@ -320,22 +343,88 @@ test("DB", suite => {
         item.other.nested.flag = false;
         item.unschemed = "rarara";
         t.throws(() => { item.blob = "foo"; }, new TypeError('Invalid hex string'));
+        t.throws(() => db.collections.test.update(item, {blob: "foo"}), new TypeError('Invalid hex string'));
         t.throws(() => { item.blob = null; }, new TypeError('blob: property needs to be a buffer or a properly encoded string'));
+        t.throws(() => db.collections.test.update(item, {blob: null}), new TypeError('blob: property needs to be a buffer or a properly encoded string'));
         t.throws(() => { item.other.nested.flag = null; }, new TypeError('other.nested.flag: property needs to be a boolean'));
+        t.throws(() => { item.other.nested = {flag: null}; }, new TypeError('other.nested.flag: property needs to be a boolean'));
+        t.throws(() => { item.other = {nested:{flag: null}}; }, new TypeError('other.nested.flag: property needs to be a boolean'));
+        t.throws(() => db.collections.test.update(item, {other:{nested:{flag: null}}}), new TypeError('other.nested.flag: property needs to be a boolean'));
         return db.save();
       })
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: false}}, unschemed: "rarara"});
+
+        item.other.nested = undefined;
+        return db.save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}, unschemed: "rarara"});
+
+        delete item.other;
+        return db.save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}, unschemed: "rarara"});
+
+        delete item.other.nested.flag;
+        item.other.nested.count = 42;
+        return db.save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
+
         t.throws(() => { item.enum = "baz"; }, new TypeError('enum: property needs to be one of: foo|bar'));
+        t.throws(() => db.collections.test.update(item, {enum: "baz"}), new TypeError('enum: property needs to be one of: foo|bar'));
         t.throws(() => { item.name = null; }, new TypeError('name: property needs to be a string'));
-        t.throws(() => { delete item.scal; }, new TypeError('scal: property is required'));
-        return db.collections.test.replaceAndSave(item._id, {scal: true, name: "baz", time: 0, enum: "bar", blob: Buffer.from([1,2,3,4])});
+        t.throws(() => db.collections.test.update(item, {name: null}), new TypeError('name: property needs to be a string'));
+        t.throws(() => { delete item.scal; }, new TypeError('test[].scal: property is required'));
+        t.throws(() => db.collections.test.update(item, {scal: undefined}), new TypeError('test[].scal: property is required'));
+
+        t.throws(() => db.collections.test.update(item, {'': null}), new TypeError("update: property name must not be empty"));
+        t.throws(() => db.collections.test.update(item), new TypeError("update: value must be a plain object"));
+        t.throws(() => db.collections.test.update(item, []), new TypeError("update: value must be a plain object"));
+        t.throws(() => db.collections.test.update(item, /asd/), new TypeError("update: value must be a plain object"));
+        t.throws(() => db.collections.test.update(item, new Date()), new TypeError("update: value must be a plain object"));
+        t.throws(() => db.collections.test.update(item, ''), new TypeError("update: value must be a plain object"));
+        t.throws(() => db.collections.test.update(item, 0), new TypeError("update: value must be a plain object"));
+        t.throws(() => db.collections.test.update(item, null), new TypeError("update: value must be a plain object"));
+        return db.collections.test.updateAndSave(item, {scal: undefined});
+      })
+      .catch(err => {
+        t.type(err, TypeError);
+        t.strictEqual(err.message, "test[].scal: property is required");
+        var item = db.collections.test[0];
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
+
+        t.throws(() => db.collections.test.replace(item, []), new TypeError("test: property must be an object"));
+        t.throws(() => db.collections.test.replace(item, /asd/), new TypeError("test: property must be an object"));
+        t.throws(() => db.collections.test.replace(item, new Date()), new TypeError("test: property must be an object"));
+        t.throws(() => db.collections.test.replace(item, ''), new TypeError("test: property must be an object"));
+        t.throws(() => db.collections.test.replace(item, 0), new TypeError("test: property must be an object"));
+        t.throws(() => db.collections.test.replace(item, null), new TypeError("test: property must be an object"));
+        t.throws(() => db.collections.test.replace(item._id, {}), new TypeError("test[].scal: property is required"));
+        t.throws(() => db.collections.test.replace(item, {}), new TypeError("test[].scal: property is required"));
+        return db.collections.test.replaceAndSave(item._id, {});
+      })
+      .catch(err => {
+        t.type(err, TypeError);
+        t.strictEqual(err.message, "test[].scal: property is required");
+        var item = db.collections.test[0];
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
+
+        return db.collections.test.replaceAndSave(item, {scal: true, name: "baz", time: 0, enum: "bar", blob: Buffer.from([1,2,3,4])});
       })
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'baz', enum: "bar", blob: Buffer.from([1,2,3,4]), scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}});
-        t.throws(() => db.collections.test.replace(item._id, {}), new TypeError('scal: property is required'));
+
         db.collections.test.add(item, 'name', 'zzz')
         db.collections.test.add(item, 'time', +new Date(2016, 10, 25, 11, 45, 42, 500))
         db.collections.test.add(item, 'other.nested.count', 101);
@@ -364,8 +453,11 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'zzz', enum: "bar", blob: Buffer.alloc(0), scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}, xxx: [1,2], xxxset: [1,2]});
-
         t.strictEqual(db.collections.test.size, 1);
+        return db.collections.test.updateAndSave(item, {});
+      })
+      .then(res => {
+        t.strictEqual(res, void 0);
         return db.collections.test.deleteAllAndSave();
       })
       .then(success => {
