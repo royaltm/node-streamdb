@@ -16,7 +16,7 @@ const Blob = require('../lib/collection/schema/types').blob;
 test("DB", suite => {
 
   suite.test("should create database with type constraint schema", t => {
-    t.plan(18+57+2);
+    t.plan(18+115+2);
     var db = new DB({schema: {
       test: {
         name: String,
@@ -36,15 +36,15 @@ test("DB", suite => {
       }
     });
 
-    t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')]),
-      ['name', 'time', 'other.nested.count', 'other', 'other.nested', 'other.nested.flag']);
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')]),
+      ['name', 'time', 'other', 'other.nested', 'other.nested.count', 'other.nested.flag']);
     t.strictSame(db.collections.test[Symbol.for('schema')].name, {
       name: 'name',
       required: false,
       type: String,
       prop: 'name'
     });
-    t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].time),
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].time),
       ['name', 'required', 'type', 'readPropertySymbol', 'prop']);
     t.strictEquals(db.collections.test[Symbol.for('schema')].time.name, 'time');
     t.strictEquals(db.collections.test[Symbol.for('schema')].time.required, false);
@@ -60,12 +60,7 @@ test("DB", suite => {
       type: Number,
       prop: 'other.nested.count'
     });
-    t.strictSame(db.collections.test[Symbol.for('schema')].other, {
-      'nested.count':
-      { name: 'other.nested.count',
-        required: false,
-        type: Number,
-        prop: 'nested.count' },
+    t.deepEqual(db.collections.test[Symbol.for('schema')].other, {
       nested:
         { count:
             { name: 'other.nested.count',
@@ -77,13 +72,18 @@ test("DB", suite => {
               required: true,
               type: Boolean,
               prop: 'flag' } },
+      'nested.count':
+      { name: 'other.nested.count',
+        required: false,
+        type: Number,
+        prop: 'nested.count' },
       'nested.flag':
         { name: 'other.nested.flag',
           required: true,
           type: Boolean,
           prop: 'nested.flag' }
     });
-    t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested'], {
+    t.deepEqual(db.collections.test[Symbol.for('schema')]['other.nested'], {
       count:
       { name: 'other.nested.count',
         required: false,
@@ -109,6 +109,66 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
+
+        t.throws(() => { item._id = null; }, new TypeError("test: reserved property name: _id"));
+        t.throws(() => { item.toJSON = null; }, new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => { item.toString = null; }, new TypeError("test: reserved property name: toString"));
+        t.throws(() => { item.__ = null; }, new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => { item.__bar = null; }, new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => { item.hasOwnProperty = null; }, new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => { item.constructor = null; }, new TypeError("test: reserved property name: constructor"));
+        t.throws(() => db.collections.test.update(item, {_id: null}), new TypeError("test: reserved property name: _id"));
+        t.throws(() => db.collections.test.update(item, {toJSON: null}), new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => db.collections.test.update(item, {toString: null}), new TypeError("test: reserved property name: toString"));
+        t.throws(() => db.collections.test.update(item, {__: null}), new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => db.collections.test.update(item, {__bar: null}), new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => db.collections.test.update(item, {hasOwnProperty: null}), new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => db.collections.test.update(item, {constructor: null}), new TypeError("test: reserved property name: constructor"));
+        t.throws(() => db.collections.test.replace(item, {_id: null, other:{nested:{flag:false}}}), new TypeError("test: reserved property name: _id"));
+        t.throws(() => db.collections.test.replace(item, {toJSON: null, other:{nested:{flag:false}}}), new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => db.collections.test.replace(item, {toString: null, other:{nested:{flag:false}}}), new TypeError("test: reserved property name: toString"));
+        t.throws(() => db.collections.test.replace(item, {__: null, other:{nested:{flag:false}}}), new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => db.collections.test.replace(item, {__bar: null, other:{nested:{flag:false}}}), new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => db.collections.test.replace(item, {hasOwnProperty: null, other:{nested:{flag:false}}}), new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => db.collections.test.replace(item, {constructor: null, other:{nested:{flag:false}}}), new TypeError("test: reserved property name: constructor"));
+        t.throws(() => { item._id = undefined; }, new TypeError("test: reserved property name: _id"));
+        t.throws(() => { item.toJSON = undefined; }, new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => { item.toString = undefined; }, new TypeError("test: reserved property name: toString"));
+        t.throws(() => { item.__ = undefined; }, new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => { item.__bar = undefined; }, new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => { item.hasOwnProperty = undefined; }, new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => { item.constructor = undefined; }, new TypeError("test: reserved property name: constructor"));
+        t.throws(() => { delete item._id; }, new TypeError("test: reserved property name: _id"));
+        t.throws(() => { delete item.toJSON; }, new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => { delete item.toString; }, new TypeError("test: reserved property name: toString"));
+        t.throws(() => { delete item.__; }, new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => { delete item.__bar; }, new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => { delete item.hasOwnProperty; }, new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => { delete item.constructor; }, new TypeError("test: reserved property name: constructor"));
+        t.throws(() => db.collections.test.update(item, {_id: undefined}), new TypeError("test: reserved property name: _id"));
+        t.throws(() => db.collections.test.update(item, {toJSON: undefined}), new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => db.collections.test.update(item, {toString: undefined}), new TypeError("test: reserved property name: toString"));
+        t.throws(() => db.collections.test.update(item, {__: undefined}), new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => db.collections.test.update(item, {__bar: undefined}), new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => db.collections.test.update(item, {hasOwnProperty: undefined}), new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => db.collections.test.update(item, {constructor: undefined}), new TypeError("test: reserved property name: constructor"));
+        t.throws(() => db.collections.test.add(item, '', 1), new TypeError("test: property name must not be empty"));
+        t.throws(() => db.collections.test.add(item, '_id', 1), new TypeError("test: reserved property name: _id"));
+        t.throws(() => db.collections.test.add(item, 'toJSON', 1), new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => db.collections.test.add(item, 'toString', 1), new TypeError("test: reserved property name: toString"));
+        t.throws(() => db.collections.test.add(item, '__', 1), new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => db.collections.test.add(item, '__bar', 1), new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => db.collections.test.add(item, 'hasOwnProperty', 1), new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => db.collections.test.add(item, 'constructor', 1), new TypeError("test: reserved property name: constructor"));
+        t.throws(() => db.collections.test.pull(item, '', 1), new TypeError("test: property name must not be empty"));
+        t.throws(() => db.collections.test.pull(item, '_id', 1), new TypeError("test: reserved property name: _id"));
+        t.throws(() => db.collections.test.pull(item, 'toJSON', 1), new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => db.collections.test.pull(item, 'toString', 1), new TypeError("test: reserved property name: toString"));
+        t.throws(() => db.collections.test.pull(item, '__', 1), new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => db.collections.test.pull(item, '__bar', 1), new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => db.collections.test.pull(item, 'hasOwnProperty', 1), new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => db.collections.test.pull(item, 'constructor', 1), new TypeError("test: reserved property name: constructor"));
+
         t.throws(() => { item.name = 123; }, new TypeError("test[].name: property needs to be a string"));
         t.throws(() => { item.name = []; }, new TypeError("test[].name: property needs to be a string"));
         t.throws(() => { item.name = {}; }, new TypeError("test[].name: property needs to be a string"));
@@ -215,8 +275,8 @@ test("DB", suite => {
       }
     });
 
-    t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')]),
-      ['name', 'enum', 'blob', 'scal', 'time', 'other.nested.count', 'other', 'other.nested', 'other.nested.flag']);
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')]),
+      ['name', 'enum', 'blob', 'scal', 'time', 'other', 'other.nested', 'other.nested.count', 'other.nested.flag']);
 
     t.strictSame(db.collections.test[Symbol.for('schema')].name, {
       "default": "foo",
@@ -232,7 +292,7 @@ test("DB", suite => {
       "type": new Enum({enum: ["foo", "bar"]}),
       "default": "bar"
     });
-    t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].blob), 
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].blob), 
       ['name', 'required', 'type', 'default', 'prop']);
     t.strictEquals(db.collections.test[Symbol.for('schema')].blob.name, "blob");
     t.strictEquals(db.collections.test[Symbol.for('schema')].blob.prop, "blob");
@@ -246,7 +306,7 @@ test("DB", suite => {
       "required": true,
       "type": new Primitive()
     });
-    t.strictSame(db.collections.test[Symbol.for('schema')].other, {
+    t.deepEqual(db.collections.test[Symbol.for('schema')].other, {
       "nested": {
         "count": {
           "default": 10,
@@ -278,7 +338,7 @@ test("DB", suite => {
         "type": Boolean,
       }
     });
-    t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested'], {
+    t.deepEqual(db.collections.test[Symbol.for('schema')]['other.nested'], {
       "count": {
         "default": 10,
         "name": "other.nested.count",
@@ -308,7 +368,7 @@ test("DB", suite => {
       "required": false,
       "type": Boolean,
     });
-    t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].time),
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].time),
       ['name', 'required', 'type', 'default', 'readPropertySymbol', 'prop']);
     t.strictEquals(db.collections.test[Symbol.for('schema')].time.name, 'time');
     t.strictEquals(db.collections.test[Symbol.for('schema')].time.required, false);
@@ -344,12 +404,12 @@ test("DB", suite => {
         item.unschemed = "rarara";
         t.throws(() => { item.blob = "foo"; }, new TypeError('Invalid hex string'));
         t.throws(() => db.collections.test.update(item, {blob: "foo"}), new TypeError('Invalid hex string'));
-        t.throws(() => { item.blob = null; }, new TypeError('blob: property needs to be a buffer or a properly encoded string'));
-        t.throws(() => db.collections.test.update(item, {blob: null}), new TypeError('blob: property needs to be a buffer or a properly encoded string'));
-        t.throws(() => { item.other.nested.flag = null; }, new TypeError('other.nested.flag: property needs to be a boolean'));
-        t.throws(() => { item.other.nested = {flag: null}; }, new TypeError('other.nested.flag: property needs to be a boolean'));
-        t.throws(() => { item.other = {nested:{flag: null}}; }, new TypeError('other.nested.flag: property needs to be a boolean'));
-        t.throws(() => db.collections.test.update(item, {other:{nested:{flag: null}}}), new TypeError('other.nested.flag: property needs to be a boolean'));
+        t.throws(() => { item.blob = null; }, new TypeError('test[].blob: property needs to be a buffer or a properly encoded string'));
+        t.throws(() => db.collections.test.update(item, {blob: null}), new TypeError('test[].blob: property needs to be a buffer or a properly encoded string'));
+        t.throws(() => { item.other.nested.flag = null; }, new TypeError('test[].other.nested.flag: property needs to be a boolean'));
+        t.throws(() => { item.other.nested = {flag: null}; }, new TypeError('test[].other.nested.flag: property needs to be a boolean'));
+        t.throws(() => { item.other = {nested:{flag: null}}; }, new TypeError('test[].other.nested.flag: property needs to be a boolean'));
+        t.throws(() => db.collections.test.update(item, {other:{nested:{flag: null}}}), new TypeError('test[].other.nested.flag: property needs to be a boolean'));
         return db.save();
       })
       .then(item => {
@@ -379,9 +439,9 @@ test("DB", suite => {
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
 
         t.throws(() => { item.enum = "baz"; }, new TypeError('enum: property needs to be one of: foo|bar'));
-        t.throws(() => db.collections.test.update(item, {enum: "baz"}), new TypeError('enum: property needs to be one of: foo|bar'));
-        t.throws(() => { item.name = null; }, new TypeError('name: property needs to be a string'));
-        t.throws(() => db.collections.test.update(item, {name: null}), new TypeError('name: property needs to be a string'));
+        t.throws(() => db.collections.test.update(item, {enum: "baz"}), new TypeError('test[].enum: property needs to be one of: foo|bar'));
+        t.throws(() => { item.name = null; }, new TypeError('test[].name: property needs to be a string'));
+        t.throws(() => db.collections.test.update(item, {name: null}), new TypeError('test[].name: property needs to be a string'));
         t.throws(() => { delete item.scal; }, new TypeError('test[].scal: property is required'));
         t.throws(() => db.collections.test.update(item, {scal: undefined}), new TypeError('test[].scal: property is required'));
 
@@ -428,9 +488,9 @@ test("DB", suite => {
         db.collections.test.add(item, 'name', 'zzz')
         db.collections.test.add(item, 'time', +new Date(2016, 10, 25, 11, 45, 42, 500))
         db.collections.test.add(item, 'other.nested.count', 101);
-        t.throws(() => db.collections.test.add(item, 'enum', null), new TypeError("enum: Enum forbids element operation"));
-        t.throws(() => db.collections.test.add(item, 'blob', null), new TypeError("blob: Blob forbids element operation"));
-        t.throws(() => db.collections.test.add(item, 'scal', null), new TypeError("scal: Primitive forbids element operation"));
+        t.throws(() => db.collections.test.add(item, 'enum', null), new TypeError("test[].enum: Enum forbids element operation"));
+        t.throws(() => db.collections.test.add(item, 'blob', null), new TypeError("test[].blob: Blob forbids element operation"));
+        t.throws(() => db.collections.test.add(item, 'scal', null), new TypeError("test[].scal: Primitive forbids element operation"));
         delete item.enum;
         delete item.blob;
         item.xxx = [1,'3',2];
@@ -445,9 +505,9 @@ test("DB", suite => {
         db.collections.test.subtract(item, 'other.nested.count', 101);
         db.collections.test.pull(item, 'xxx', '3');
         db.collections.test.pull(item, 'xxxset', 3);
-        t.throws(() => db.collections.test.subtract(item, 'enum', null), new TypeError("enum: Enum forbids element operation"));
-        t.throws(() => db.collections.test.subtract(item, 'blob', null), new TypeError("blob: Blob forbids element operation"));
-        t.throws(() => db.collections.test.subtract(item, 'scal', null), new TypeError("scal: Primitive forbids element operation"));
+        t.throws(() => db.collections.test.subtract(item, 'enum', null), new TypeError("test[].enum: Enum forbids element operation"));
+        t.throws(() => db.collections.test.subtract(item, 'blob', null), new TypeError("test[].blob: Blob forbids element operation"));
+        t.throws(() => db.collections.test.subtract(item, 'scal', null), new TypeError("test[].scal: Primitive forbids element operation"));
         return db.save();
       })
       .then(item => {
@@ -468,7 +528,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with simple relation", t => {
-    t.plan(54);
+    t.plan(55);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -483,7 +543,7 @@ test("DB", suite => {
 
     t.type(db, DB);
 
-    t.strictSame(Object.keys(db.collections.foos[Symbol.for('schema')]), ['name', 'value', 'bar']);
+    t.strictSame(Object.getOwnPropertyNames(db.collections.foos[Symbol.for('schema')]), ['name', 'value', 'bar']);
     t.strictSame(db.collections.foos[Symbol.for('schema')].name, {
       "name": "name",
       "prop": "name",
@@ -496,7 +556,7 @@ test("DB", suite => {
       "required": false,
       "type": new Primitive()
     });
-    t.strictSame(Object.keys(db.collections.foos[Symbol.for('schema')].bar),
+    t.strictSame(Object.getOwnPropertyNames(db.collections.foos[Symbol.for('schema')].bar),
       ['name', 'required', 'type', 'collection', 'klass', 'hasOne', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
     t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
     t.strictEquals(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
@@ -508,14 +568,13 @@ test("DB", suite => {
     t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
     t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, 'symbol');
 
-    t.strictSame(db.collections.bars[Symbol.for('schema')], {
-      "counter": {
-        "default": 0,
-        "name": "counter",
-        "prop": "counter",
-        "required": false,
-        "type": Number,
-      }
+    t.strictSame(Object.getOwnPropertyNames(db.collections.bars[Symbol.for('schema')]), ['counter']);
+    t.strictSame(db.collections.bars[Symbol.for('schema')].counter, {
+      "default": 0,
+      "name": "counter",
+      "prop": "counter",
+      "required": false,
+      "type": Number
     });
 
     t.strictEqual(db.collections.foos.size, 0);
@@ -528,8 +587,8 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: "meh", value: -50});
-        t.throws(() => { item.name = null; }, new TypeError('name: property needs to be a string'));
-        t.throws(() => { item.value = []; }, new TypeError('value: property needs to be a primitive'));
+        t.throws(() => { item.name = null; }, new TypeError('foos[].name: property needs to be a string'));
+        t.throws(() => { item.value = []; }, new TypeError('foos[].value: property needs to be a primitive'));
 
         item.bar = barid = db.collections.bars.create();
         return db.save();

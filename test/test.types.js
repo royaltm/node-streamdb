@@ -46,11 +46,11 @@ test("types", suite => {
     t.strictEqual(new Primitive().validate('foo'), 'foo');
     var val = Symbol('x');
     t.strictEqual(new Primitive().validate(val), val);
-    t.throws(() => new Primitive().validate({}, {name: 'foo'}), new TypeError("foo: property needs to be a primitive"));
-    t.throws(() => new Primitive().validate([], {name: 'foo'}), new TypeError("foo: property needs to be a primitive"));
-    t.throws(() => new Primitive().validate(new Date(), {name: 'foo'}), new TypeError("foo: property needs to be a primitive"));
-    t.throws(() => new Primitive().validate(/asd/, {name: 'foo'}), new TypeError("foo: property needs to be a primitive"));
-    t.throws(() => new Primitive().validateElement(undefined, {name: 'foo'}), new TypeError("foo: Primitive forbids element operation"));
+    t.throws(() => new Primitive().validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a primitive"));
+    t.throws(() => new Primitive().validate([], {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a primitive"));
+    t.throws(() => new Primitive().validate(new Date(), {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a primitive"));
+    t.throws(() => new Primitive().validate(/asd/, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a primitive"));
+    t.throws(() => new Primitive().validateElement(undefined, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: Primitive forbids element operation"));
     t.end();
   });
 
@@ -66,21 +66,21 @@ test("types", suite => {
     t.type(new Enum(schema).validateElement, 'function');
     t.strictEqual(new Enum(schema).validate('foo'), 'foo');
     t.strictEqual(new Enum(schema).validate('bar'), 'bar');
-    t.throws(() => new Enum(schema).validate(undefined, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate(null, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate(false, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate(true, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate('', {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate('xxx', {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate(0, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate(1, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate({}, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate({}, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate({}, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate([], {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate(new Date(), {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validate(/asd/, {name: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
-    t.throws(() => new Enum(schema).validateElement(undefined, {name: 'foo'}), new TypeError("foo: Enum forbids element operation"));
+    t.throws(() => new Enum(schema).validate(undefined, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate(null, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate(false, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate(true, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate('', {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate('xxx', {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate(0, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate(1, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate([], {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate(new Date(), {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validate(/asd/, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be one of: foo|bar"));
+    t.throws(() => new Enum(schema).validateElement(undefined, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: Enum forbids element operation"));
     t.end();
   });
 
@@ -100,20 +100,20 @@ test("types", suite => {
     t.strictSame(new Blob(schema).validate('abba'), Buffer.from('abba', 'hex'));
     t.strictSame(new Blob(schema).validate(''), Buffer.alloc(0));
     t.strictSame(new Blob(schema).validate(val), val);
-    t.throws(() => new Blob(schema).validate(undefined, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate(null, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate(false, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate(true, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate('xxx', {name: 'foo'}), new TypeError("Invalid hex string"));
-    t.throws(() => new Blob(schema).validate(0, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate(1, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate({}, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate({}, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate({}, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate([], {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate(new Date(), {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate(/asd/, {name: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validateElement(undefined, {name: 'foo'}), new TypeError("foo: Blob forbids element operation"));
+    t.throws(() => new Blob(schema).validate(undefined, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate(null, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate(false, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate(true, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate('xxx', {[Symbol.for("name")]: 'foo'}), new TypeError("Invalid hex string"));
+    t.throws(() => new Blob(schema).validate(0, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate(1, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate([], {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate(new Date(), {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validate(/asd/, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
+    t.throws(() => new Blob(schema).validateElement(undefined, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: Blob forbids element operation"));
     t.end();
   });
 
@@ -124,11 +124,11 @@ test("DB", suite => {
 
   class Stars extends Type {
     validate(value, descr) {
-      if ('string' !== typeof value || !/^\*+$/.test(value)) throw new TypeError(`${descr.name}: not a star`);
+      if ('string' !== typeof value || !/^\*+$/.test(value)) throw new TypeError(`${descr[Symbol.for("name")]}: not a star`);
       return value;
     }
     validateElement(value, descr) {
-      if ('string' !== typeof value || !/^\*+$/.test(value)) throw new TypeError(`${descr.name}: not a star`);
+      if ('string' !== typeof value || !/^\*+$/.test(value)) throw new TypeError(`${descr[Symbol.for("name")]}: not a star`);
       return value;
     }
     get isPrimitive() { return true; }
@@ -139,11 +139,11 @@ test("DB", suite => {
 
   class Email extends Type {
     validate(value, descr) {
-      if ('string' !== typeof value || !value.includes('@')) throw new TypeError(`${descr.name}: not an email`);
+      if ('string' !== typeof value || !value.includes('@')) throw new TypeError(`${descr[Symbol.for("name")]}: not an email`);
       return value;
     }
     validateElement(value, descr) {
-      throw new TypeError(`${descr.name}: Email forbids element operation`);
+      throw new TypeError(`${descr[Symbol.for("name")]}: Email forbids element operation`);
     }
     get isPrimitive() { return true; }
     static get typeName() {
@@ -184,12 +184,12 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, email: 'foo@bar', stars: '************'})
-        t.throws(() => { item.email = ''; }, new TypeError("email: not an email"));
-        t.throws(() => { item.email = 'foo'; }, new TypeError("email: not an email"));
-        t.throws(() => { item.email = null; }, new TypeError("email: not an email"));
-        t.throws(() => { item.stars = ''; }, new TypeError("stars: not a star"));
-        t.throws(() => { item.stars = 'foo'; }, new TypeError("stars: not a star"));
-        t.throws(() => { item.stars = null; }, new TypeError("stars: not a star"));
+        t.throws(() => { item.email = ''; }, new TypeError("test[].email: not an email"));
+        t.throws(() => { item.email = 'foo'; }, new TypeError("test[].email: not an email"));
+        t.throws(() => { item.email = null; }, new TypeError("test[].email: not an email"));
+        t.throws(() => { item.stars = ''; }, new TypeError("test[].stars: not a star"));
+        t.throws(() => { item.stars = 'foo'; }, new TypeError("test[].stars: not a star"));
+        t.throws(() => { item.stars = null; }, new TypeError("test[].stars: not a star"));
 
         delete item.email;
         item.stars = undefined;
@@ -198,8 +198,8 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id});
-        t.throws(() => { db.collections.test.add(item, 'email', ''); }, new TypeError("email: Email forbids element operation"));
-        t.throws(() => { db.collections.test.add(item, 'stars', 'x'); }, new TypeError("stars: not a star"));
+        t.throws(() => { db.collections.test.add(item, 'email', ''); }, new TypeError("test[].email: Email forbids element operation"));
+        t.throws(() => { db.collections.test.add(item, 'stars', 'x'); }, new TypeError("test[].stars: not a star"));
         return db.collections.test.addAndSave(item, 'stars', '*');
       })
       .then(item => {
