@@ -1,112 +1,128 @@
 Stream Database
 ===============
 
-Stream DB is a node.js based in-memory [Document Database](https://en.wikipedia.org/wiki/Document-oriented_database) which synchronizes via log stream.
+Two concepts are behind the design of the Stream DB:
+
+1. High Availability
+2. Rapid state distribution
+
+Stream DB is a [Document Database](https://en.wikipedia.org/wiki/Document-oriented_database) for nodejs which synchronizes its state via `Duplex` stream.
 
 Key features:
 
+- Serializable state published and read from a `Duplex` stream (requires external log-consensus entity)
 - Document-oriented database
-- Data must fit in program memory
-- Duplex stream for publishing and receiving changes
-- Optional type enforce schema, required properties, default values
-- Optional one-many, one-one and many-many relation schema with extra magic
-- Optional multi and unique indexes for model properties
-- Updates are propagated asynchronously via log stream
+- Optional constraint schema (extensible types, required properties, default values)
+- Lookup indexes on properties and unique indexes
+- Composite (on many properties) unique indexes
+- One-many, one-one and many-many relations with foreign key concept
+- Searching is performed using built-in lazy [iterators](lib/iter/README.md)
 
-Limitation:
+Limitations:
 
-- Requires latest ES6 features (including Proxy)
+- data must fit in program memory
+- schema is currently static (no schema updates via stream), see #Schema below
+- nodejs engine requires latest ES6 features (including Proxy) (nodejs >= 6)
 
 
 Usage
 -----
 
-To be able to use Stream DB one must connect its writable end of stream to the source of changes. This source can be another database stream source, e.g. located in other process on other server. To update database state one must connect its readable end of stream to the log synchronizing entity. This entity must then synchronize the changes from all sources and propagate it back to all synchronized database instances.
+To be able to use Stream DB one must connect a writable end of its stream to the source of changes. This source can be another database instance stream, (e.g. located in the same program or in other process on other server or even another planet). To update database state one must connect readable end of the same stream to the log-consensus entity. This entity must then synchronize the changes from all sources and propagate it back to all database instances.
 
-One can also use the Stream DB duplex stream for permanent data storage.
+One can also use the Stream DB's `Duplex` stream for permanent data storage.
 
-For demonstration purposes as a synchronizing entity we will use a `stream.PassThrough` instance.
+For demonstration purposes we will use a `stream.PassThrough` instance as a log-consensus entity.
 
 Let's setup everything first.
 
 ```js
 const DB = require('streamdb');
-var db1 = new DB();
-var db2 = new DB();
-var syncStream = new require('stream').PassThrough({objectMode: true});
-db1.stream.pipe(syncStream).pipe(db1.stream);
-db2.stream.pipe(syncStream).pipe(db2.stream);
+
+var db1 = new DB(); // create 1st instance
+var db2 = new DB(); // create 2nd instance
+var consensus = new require('stream').PassThrough({objectMode: true});
+// connect 1st database stream output with log-consensus entity
+// and the entity output with 1st database stream input
+db1.stream.pipe(consensus).pipe(db1.stream);
+// connect 2nd database stream output with log-consensus entity
+// and the entity output with 2nd database stream input
+db2.stream.pipe(consensus).pipe(db2.stream);
 ```
 
-For a real-life example however one should consider applying a [consensus](https://en.wikipedia.org/wiki/Consensus_(computer_science)) algorithm to elect synchronizing master among concurrent servers. Or use some queue service like Kafka with single partition topic.
+For a real-life example however one should consider applying a [consensus](https://en.wikipedia.org/wiki/Consensus_(computer_science)) algorithm to elect synchronizing master among concurrent servers. This can be some queue service like [Rabbitmq](https://www.rabbitmq.com) or [Apache Kafka](https://kafka.apache.org) with single partition topic or a generic [Raft](https://raft.github.io) server like [this one](https://github.com/royaltm/node-zmq-raft).
 
-Ok, now let's create some documents on db1.
+Ok, now let's create some documents on `db1`.
 
 ```js
+// implicitly creates "constellations" collection
 var constellations1 = db1.collections.constellations;
-var doc_id = constellations1.create({name: "Sagittarius"});
+var itemId = constellations1.create({name: "Sagittarius"});
 // the changes will propagate on next tick or we can force them to be flushed immediately
-// so we can wait for the results
-constellations1.save().then(p => console.log('We have now a new constellation: "%s"', p.name));
+// this way we can wait for the results using promise
+constellations1.save().then(item => console.log('We have now a new constellation: "%s"', item.name));
 ```
 
-We have just created a new collection and a new document representing Sagittarius constellation.
+We've just created a new collection and a new document representing Sagittarius constellation.
 Now let's see if we can pick up the changes on both databases.
 
 ```js
 assert(constellations.size === 1);
-var doc_from1 = constellations1[doc_id];
-console.log(doc_from1.name); // Sagittarius
-assert(doc_from1._id === doc_id);
+// get item by its ID
+var itemFromDb1 = constellations1[itemId];
+console.log(itemFromDb1.name); // Sagittarius
+assert(itemFromDb1._id === itemId);
 
 assert(db2.collections.constellations.size === 1);
-var doc_from2 = db2.collections.constellations[doc_id];
-console.log(doc_from2.name); // Sagittarius
-assert(doc_from2._id === doc_id);
+// get item by its ID
+var itemFromDb2 = db2.collections.constellations[itemId];
+console.log(itemFromDb2.name); // Sagittarius
+assert(itemFromDb2._id === itemId);
 ```
 
 Now let's make some changes to our constellation and see what happens:
 
 ```js
-doc_from2.zodiac = "♐";
-doc_from2.location = {ra: 19, dec: -25};
-doc_from2.area = "867 sq. deg.";
-db2.save().then(p => console.log('We have now an updated constellation: %j', p));
+itemFromDb2.zodiac = "♐";
+itemFromDb2.location = {ra: 19, dec: -25};
+itemFromDb2.area = "867 sq. deg.";
+db2.save().then(item => console.log('We have now an updated constellation: %j', item));
 ```
 
 After changes are synchronized:
 
 ```js
-assert(doc_from2.zodiac === "♐");
-assert(doc_from1.zodiac === "♐");
+assert(itemFromDb2.zodiac === "♐");
+assert(itemFromDb1.zodiac === "♐");
 ```
 
 To delete our document simply do (on any of the databases):
 
 ```js
-delete constellations1[doc_from1._id];
-constellations1.save().then(confirm => console.log('Constellation has been deleted: %s', confirm));
+constellations1.deleteAndSave(itemFromDb1).
+  then(confirm => console.log('Constellation has been deleted: %s', confirm));
 ```
 
 Check that our constellation is actually removed:
 
 ```js
 constellations1.size === 0;
-for(let doc of constellations1) console.log(doc); // nothing
+for(let item of constellations1) console.log(item); // nothing
 db2.collections.constellations.size === 0
-for(let doc of db2.collections.constellations) console.log(doc); // still nothing
-doc_from1._id; // TypeError: Cannot perform 'get' on a proxy that has been revoked
-doc_from2._id; // TypeError: Cannot perform 'get' on a proxy that has been revoked
+for(let item of db2.collections.constellations) console.log(item); // still nothing
+itemFromDb1._id; // throws TypeError: Cannot perform 'get' on a proxy that has been revoked
+itemFromDb2._id; // throws TypeError: Cannot perform 'get' on a proxy that has been revoked
 ```
 
 ### Schema
 
-For the simplicity of the setup for the below examples, let's assume that our example database will synchronize state with itself.
+For the simplicity of the setup for the examples below, let's assume that our example database will synchronize its state with itself.
 
 Let's create schema for our constellations and establish a relationship with stars.
 
 ```js
 var db = new DB({schema: {
+
   constellations: {
     name: {type: String, unique: true, required: true},
     'location.ra': Number,
@@ -114,6 +130,7 @@ var db = new DB({schema: {
     zodiac: String,
     createdAt: {type: Date, required: true, default: Date.now}
   },
+
   stars: {
     name: {type: String, unique: true, required: true},
     bayer: String,
@@ -231,7 +248,3 @@ The error is emitted when:
 Version patch is simply ignored and has only informative purpose.
 
 When database reads version and decides not to emit an `error` it emits `version` message instead.
-
-if read.major != my.major error
-if read.minor > my.minor error
-
