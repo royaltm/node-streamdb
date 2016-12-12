@@ -251,10 +251,12 @@ Custom types may be provided in `types` option to a database constructor.
 The `Type` is a class extending `DB.Type`.
 
 ```js
-class Email extends Type {
+class Email extends DB.Type {
 
   validate(value, descr) {
-    if ("string" !== typeof value || !value.includes('@')) throw new TypeError(`${descr[Symbol.for("name")]}: not an email`);
+    if ("string" !== typeof value || !value.includes('@')) {
+      throw new TypeError(`${descr[Symbol.for("name")]}: not an email`);
+    }
     return value;
   }
 
