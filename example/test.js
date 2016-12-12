@@ -9,7 +9,7 @@ module.exports = function(schemaOnly) {
       time: Date,
       'other.nested.count': Number,
       'other.nested.flag': {type: Boolean, required: true},
-      'other.yet.anything': {type: "*", required: true, default: null}
+      'other.yet.anything': {required: true, default: null}
     }
   }});
 
