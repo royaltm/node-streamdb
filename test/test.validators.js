@@ -9,17 +9,19 @@ const Item = require('../lib/collection/item').Item;
 test("DB", suite => {
 
   suite.test("should create database with custom validator", t => {
-    t.plan(13);
+    t.plan(21);
 
     var db = new DB({
       validatorsRoot: {
         some: {
           validators: {
             foo(value, operator) {
-              if (('number' !== typeof value || value % 1 !== 0 || value < 0)) {
-                throw new TypeError(`${this.name}: is not a natural number`);
+              if (value !== undefined) {
+                if (('number' !== typeof value || value % 1 !== 0 || value < 0)) {
+                  throw new TypeError(`${this.name}: is not a natural number`);
+                }
+                return value + 1;
               }
-              return value + 1;
             }
           }
         }
@@ -46,7 +48,6 @@ test("DB", suite => {
         t.throws(() => { item.foo = ''; }, new TypeError("foo: is not a natural number"));
         t.throws(() => { item.foo = 3.4; }, new TypeError("foo: is not a natural number"));
         t.throws(() => { item.foo = -1; }, new TypeError("foo: is not a natural number"));
-        t.throws(() => { delete item.foo; }, new TypeError("foo: is not a natural number"));
 
         item.foo = 1;
         return db.save();
@@ -60,6 +61,32 @@ test("DB", suite => {
       .then(item => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, foo: 6});
+
+        delete item.foo;
+        return db.save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id});
+        t.throws(() => { db.collections.test.subtract(item, 'foo', 'x'); }, new TypeError("foo: is not a natural number"));
+
+        return db.collections.test.subtract(item, 'foo', 5).save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, foo: -6});
+
+        return db.collections.test.update(item, {foo: undefined}).save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id});
+
+        return db.collections.test.add(item, 'foo', 41).save();
+      })
+      .then(item => {
+        t.type(item, Item);
+        t.deepEqual(item.toJSON(), {_id: item._id, foo: 42});
       });
     }).catch(t.threw);
   });
