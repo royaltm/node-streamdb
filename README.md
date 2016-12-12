@@ -250,36 +250,36 @@ You may not create indexes on `Blob` nor `Date` type.
 Custom types may be provided in `types` option to a database constructor.
 The `Type` is a class extending `DB.Type`.
 
-```
-  class Email extends Type {
+```js
+class Email extends Type {
 
-    validate(value, descr) {
-      if ("string" !== typeof value || !value.includes('@')) throw new TypeError(`${descr[Symbol.for("name")]}: not an email`);
-      return value;
-    }
-
-    validateElement(value, descr) {
-      throw new TypeError(`${descr[Symbol.for("name")]}: Email forbids element operation`);
-    }
-
-    get isPrimitive() {
-      return true;
-    }
-
-    static get typeName() {
-      return "email";
-    }
-
+  validate(value, descr) {
+    if ("string" !== typeof value || !value.includes('@')) throw new TypeError(`${descr[Symbol.for("name")]}: not an email`);
+    return value;
   }
 
-  var db = new DB({types: [Email], schema: {
-    users: {
-      email: {type: 'email', required: true}
-    }
-  }});
+  validateElement(value, descr) {
+    throw new TypeError(`${descr[Symbol.for("name")]}: Email forbids element operation`);
+  }
 
-  See `Type` [definition](lib/collection/schema/types/base.js).
+  get isPrimitive() {
+    return true;
+  }
+
+  static get typeName() {
+    return "email";
+  }
+
+}
+
+var db = new DB({types: [Email], schema: {
+  users: {
+    email: {type: 'email', required: true}
+  }
+}});
 ```
+
+See `Type` [definition](lib/collection/schema/types/base.js).
 
 Schema
 ------
