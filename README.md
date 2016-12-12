@@ -17,6 +17,7 @@ Key features:
 - Composite (on many properties) unique indexes
 - One-many, one-one and many-many relations with foreign key concept
 - Searching is performed using built-in lazy [iterators](lib/iter/README.md)
+- User defined collection models, constraint types and validators
 
 Limitations:
 
@@ -225,6 +226,59 @@ Then...
 ```js
 console.log("%j", sagitarius.stars);
 assert(sagitarius.stars.length === 0);
+```
+
+Types
+-----
+
+Built-in types:
+
+- `Any` or `*` - anything is accepted
+- `Primitive` - only scalar values are accepted: `null`, `number`, `string`, `boolean`
+- `Boolean`
+- `String`
+- `Number`
+- `Date` - accepts date, number or string and converts them to a Date instance
+- `Enum` - requires `enum` property with enumerations defined as an array of strings
+- `Blob` - accepts strings or buffers, strings converts to buffers,
+           optional `encoding` property may define encoding for strings
+
+You may not create indexes on `Blob` nor `Date` type.
+
+### User-defined types
+
+Custom types may be provided in `types` option to a database constructor.
+The `Type` is a class extending `DB.Type`.
+
+```
+  class Email extends Type {
+
+    validate(value, descr) {
+      if ("string" !== typeof value || !value.includes('@')) throw new TypeError(`${descr[Symbol.for("name")]}: not an email`);
+      return value;
+    }
+
+    validateElement(value, descr) {
+      throw new TypeError(`${descr[Symbol.for("name")]}: Email forbids element operation`);
+    }
+
+    get isPrimitive() {
+      return true;
+    }
+
+    static get typeName() {
+      return "email";
+    }
+
+  }
+
+  var db = new DB({types: [Email], schema: {
+    users: {
+      email: {type: 'email', required: true}
+    }
+  }});
+
+  See `Type` [definition](lib/collection/schema/types/base.js).
 ```
 
 Schema
