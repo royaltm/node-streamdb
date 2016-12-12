@@ -128,6 +128,7 @@ test("schema errors", suite => {
     t.throws(() => new DB({schema: {foos: {bars: {hasMany: {collection: 'bars', hasMany: 'foos'}, default: null}}}}), new SchemaSyntaxError("foos: property default value is not allowed for a relation in bars"));
     t.throws(() => new DB({schema: {foos: {bars: {type: null, default: {} }}}}), new SchemaSyntaxError("foos: property default value must be a function or a scalar in bars"));
     t.throws(() => new DB({schema: {foos: {bars: {type: '*', default: [] }}}}), new SchemaSyntaxError("foos: property default value must be a function or a scalar in bars"));
+    t.throws(() => new DB({schema: {foos: {bars: {default: [] }}}}), new SchemaSyntaxError("foos: property default value must be a function or a scalar in bars"));
     t.throws(() => new DB({schema: {foos: {bars: {type: 'date', default: new Date() }}}}), new SchemaSyntaxError("foos: property default value must be a function or a scalar in bars"));
     t.end();
   });

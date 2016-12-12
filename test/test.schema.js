@@ -588,7 +588,7 @@ test("DB", suite => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: "meh", value: -50});
         t.throws(() => { item.name = null; }, new TypeError('foos[].name: property needs to be a string'));
-        t.throws(() => { item.value = []; }, new TypeError('foos[].value: property needs to be a primitive'));
+        t.throws(() => { item.value = []; }, new TypeError('foos[].value: property needs to be null, a string, a number or a boolean'));
 
         item.bar = barid = db.collections.bars.create();
         return db.save();
