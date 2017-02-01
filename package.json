@@ -1,6 +1,6 @@
 {
   "name": "node-streamdb",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "description": "log based in-memory document database",
   "main": "lib/index.js",
