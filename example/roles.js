@@ -16,8 +16,11 @@ module.exports = function(schemaOnly) {
     },
     users: {
       createdAt: {type: Date, required: true, default: Date.now},
-      name: {type: String, unique: true, required: true},
-      email: String
+      login: {type: String, unique: true, required: true},
+      email: String,
+      firstName: String,
+      lastName: String,
+      nameEmail: ['lastName', 'firstName', 'email']
     }
   }});
 
@@ -40,16 +43,22 @@ module.exports = function(schemaOnly) {
     var wimpAdminId = roles.create({role: 'admin', group: wimpsId});
     var wimpGuestId = roles.create({role: 'guest', group: wimpsId});
 
-    users.create({name: "Badass Numer Uno", roles: [wimpOwnerId, badassOwnerId, badassAdminId]});
-    users.create({name: "BOFH",             roles: [badassAdminId]});
-    users.create({name: "LART user",        roles: [badassAdminId]});
-    users.create({name: "Badass MF",        roles: [badassGuestId]});
-
-    users.create({name: "Whiny admin",      roles: [wimpAdminId]});
-    users.create({name: "Wimpy 1",          roles: [wimpGuestId]});
-    users.create({name: "Whiny guest",      roles: [wimpGuestId]});
-
-    users.create({name: "The Guest",        roles: [badassGuestId, wimpGuestId]});
+    users.create({login: "Badass Numer Uno", roles: [wimpOwnerId, badassOwnerId, badassAdminId],
+        firstName: "Dżon", lastName: "Kowalski", email: "dzon@badasses.me"});
+    users.create({login: "BOFH",             roles: [badassAdminId],
+        firstName: "Suzuki", lastName: "Kowalski", email: "suzu@badasses.me"});
+    users.create({login: "LART user",        roles: [badassAdminId],
+        firstName: "Suzuki", lastName: "Kowalski"});
+    users.create({login: "Badass MF",        roles: [badassGuestId],
+        firstName: "Misha", lastName: "Zupenko", email: "zupenko@ru.net"});
+    users.create({login: "Whiny admin",      roles: [wimpAdminId],
+        lastName: "Kowalski"});
+    users.create({login: "Wimpy 1",          roles: [wimpGuestId],
+        firstName: "Foo", lastName: "Bar"});
+    users.create({login: "Whiny guest",      roles: [wimpGuestId],
+        firstName: "Foo", lastName: "Bar"});
+    users.create({login: "The Guest",        roles: [badassGuestId, wimpGuestId],
+        firstName: "Clint", lastName: "Eastwood", email: "goahead@makemy.day"});
 
     return db.save().then(() => db);
   });
