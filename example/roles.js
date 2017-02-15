@@ -35,13 +35,13 @@ module.exports = function(schemaOnly) {
     var badassesId = groups.create({name: 'Badasses'});
     var wimpsId = groups.create({name: 'Wimps'});
 
-    var badassOwnerId = roles.create({role: 'owner', group: badassesId});
-    var badassAdminId = roles.create({role: 'admin', group: badassesId});
-    var badassGuestId = roles.create({role: 'guest', group: badassesId});
+    var badassOwnerId = roles.upsert({role: 'owner', group: badassesId});
+    var badassAdminId = roles.upsert({role: 'admin', group: badassesId});
+    var badassGuestId = roles.upsert({role: 'guest', group: badassesId});
 
-    var wimpOwnerId = roles.create({role: 'owner', group: wimpsId});
-    var wimpAdminId = roles.create({role: 'admin', group: wimpsId});
-    var wimpGuestId = roles.create({role: 'guest', group: wimpsId});
+    var wimpOwnerId = roles.upsert({role: 'owner', group: wimpsId});
+    var wimpAdminId = roles.upsert({role: 'admin', group: wimpsId});
+    var wimpGuestId = roles.upsert({role: 'guest', group: wimpsId});
 
     users.create({login: "Badass Numer Uno", roles: [wimpOwnerId, badassOwnerId, badassAdminId],
         firstName: "Dżon", lastName: "Kowalski", email: "dzon@badasses.me"});

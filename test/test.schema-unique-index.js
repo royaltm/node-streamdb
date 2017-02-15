@@ -18,7 +18,7 @@ const { UniqueConstraintViolationError } = require('../lib/errors');
 test("DB", suite => {
 
   suite.test("should create database with unique index", t => {
-    t.plan(48+84);
+    t.plan(48+90);
     var db = new DB({schema: {
       test: {
         bool: {type: Boolean, unique: true},
@@ -204,12 +204,22 @@ test("DB", suite => {
       t.strictEqual(db.collections.test.by.name.get(undefined), undefined);
       t.strictEqual(db.collections.test.by.time, undefined);
 
-      delete item.bool;
-      delete item.value;
-      delete item.serial;
-      delete item.name;
-      delete item.time;
-      return db.save();
+      var newid = db.collections.test.upsert({bool: true, value: 1, serial: 77, name: 'foo', time: new Date(2017,0,1)});
+      return db.save().then(item2 => {
+        t.strictEqual(db.collections.test.by.bool.size, 1);
+        t.type(item2, Item);
+        t.strictEqual(db.collections.test[newid], undefined);
+        t.strictEqual(item2, item);
+        t.notStrictEqual(item2._id, newid);
+        t.deepEqual(JSON.parse(JSON.stringify(item2)), {_id: itemid, bool: true, value: 1, serial: 77, name: 'foo', time: new Date(2017,0,1).toJSON()});
+
+        delete item.bool;
+        delete item.value;
+        delete item.serial;
+        delete item.name;
+        delete item.time;
+        return db.save();
+      });
     }).then(item => {
       t.strictEqual(db.collections.test.size, 1);
       t.type(item, Item);
