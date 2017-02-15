@@ -181,6 +181,31 @@ test("CompositeUniqueIndex", suite => {
     t.end();
   });
 
+  suite.test('should return partial indexes', t => {
+    var index = new CompositeUniqueIndex(3);
+    var value = new Date();
+    t.strictEqual(index.componentCount, 3);
+    t.strictEqual(index.get(), index);
+    t.type(index.get(1), CompositeUniqueIndex);
+    t.type(index.get(1).get(2), CompositeUniqueIndex);
+    t.type(index.get().get(1, 2), CompositeUniqueIndex);
+    t.type(index.get(1, 2).get(), CompositeUniqueIndex);
+    t.strictEqual(index.get(1).get(2).get(3), undefined);
+    t.strictEqual(index.get(1).get(2, 3), undefined);
+    t.strictEqual(index.get(1, 2).get(3), undefined);
+    t.strictEqual(index.get(1, 2, 3), undefined);
+    t.strictEqual(index.set([1, 2, 3], value), 3);
+    t.type(index.get(1), CompositeUniqueIndex);
+    t.type(index.get(1).get(2), CompositeUniqueIndex);
+    t.type(index.get().get(1, 2), CompositeUniqueIndex);
+    t.type(index.get(1, 2).get(), CompositeUniqueIndex);
+    t.strictEqual(index.get(1).get(2).get(3), value);
+    t.strictEqual(index.get(1).get(2, 3), value);
+    t.strictEqual(index.get(1, 2).get(3), value);
+    t.strictEqual(index.get(1, 2, 3), value);
+    t.end();
+  });
+
   suite.test('should be a composite unique index', t => {
     var index = new CompositeUniqueIndex(3);
     t.strictEqual(index.componentCount, 3);
@@ -622,6 +647,55 @@ test("CompositeMultiValueIndex", suite => {
     t.strictEqual(index.delete([1, 1], 'a'), true);
     t.strictEqual(index.size, 0);
     t.strictSame(index.toArray(), []);
+    t.end();
+  });
+
+  suite.test('should return partial indexes', t => {
+    var index = new CompositeMultiValueIndex(3);
+    var value = new Date();
+    t.strictEqual(index.componentCount, 3);
+    t.strictEqual(index.get(), index);
+    t.type(index.get(1), CompositeMultiValueIndex);
+    t.type(index.get(1).get(2), CompositeMultiValueIndex);
+    t.type(index.get().get(1, 2), CompositeMultiValueIndex);
+    t.type(index.get(1, 2).get(), CompositeMultiValueIndex);
+    t.type(index.get(1).get(2).get(3), MultiValueSet);
+    t.strictEqual(index.get(1).get(2).get(3).count(), 0);
+    t.strictSame(index.get(1).get(2).get(3).toArray(), []);
+    t.strictSame(index.get(1).get(2).get(3).has(value), false);
+    t.type(index.get(1).get(2, 3), MultiValueSet);
+    t.strictEqual(index.get(1).get(2, 3).count(), 0);
+    t.strictSame(index.get(1).get(2, 3).toArray(), []);
+    t.strictSame(index.get(1).get(2, 3).has(value), false);
+    t.type(index.get(1, 2).get(3), MultiValueSet);
+    t.strictEqual(index.get(1, 2).get(3).count(), 0);
+    t.strictSame(index.get(1, 2).get(3).toArray(), []);
+    t.strictSame(index.get(1, 2).get(3).has(value), false);
+    t.type(index.get(1, 2, 3), MultiValueSet);
+    t.strictEqual(index.get(1, 2, 3).count(), 0);
+    t.strictSame(index.get(1, 2, 3).toArray(), []);
+    t.strictSame(index.get(1, 2, 3).has(value), false);
+    t.strictEqual(index.add([1, 2, 3], value), 3);
+    t.type(index.get(1), CompositeMultiValueIndex);
+    t.type(index.get(1).get(2), CompositeMultiValueIndex);
+    t.type(index.get().get(1, 2), CompositeMultiValueIndex);
+    t.type(index.get(1, 2).get(), CompositeMultiValueIndex);
+    t.type(index.get(1).get(2).get(3), MultiValueSet);
+    t.strictEqual(index.get(1).get(2).get(3).count(), 1);
+    t.strictSame(index.get(1).get(2).get(3).toArray()[0], value);
+    t.strictSame(index.get(1).get(2).get(3).has(value), true);
+    t.type(index.get(1).get(2, 3), MultiValueSet);
+    t.strictEqual(index.get(1).get(2, 3).count(), 1);
+    t.strictSame(index.get(1).get(2, 3).toArray()[0], value);
+    t.strictSame(index.get(1).get(2, 3).has(value), true);
+    t.type(index.get(1, 2).get(3), MultiValueSet);
+    t.strictEqual(index.get(1, 2).get(3).count(), 1);
+    t.strictSame(index.get(1, 2).get(3).toArray()[0], value);
+    t.strictSame(index.get(1, 2).get(3).has(value), true);
+    t.type(index.get(1, 2, 3), MultiValueSet);
+    t.strictEqual(index.get(1, 2, 3).count(), 1);
+    t.strictSame(index.get(1, 2, 3).toArray()[0], value);
+    t.strictSame(index.get(1, 2, 3).has(value), true);
     t.end();
   });
 
