@@ -15,7 +15,7 @@ const Primitive = require('../lib/collection/schema/types').primitive;
 test("DB", suite => {
 
   suite.test("should create database with one to many relations", t => {
-    t.plan(120);
+    t.plan(123);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -109,6 +109,9 @@ test("DB", suite => {
         t.type(bar, Item);
         t.type(bar.foos, ManyToOneSet);
         t.type(bar.foos.ary, Array);
+        t.type(bar.foos.has(db.collections.foos[0]), true);
+        t.type(bar.foos.has(db.collections.foos[1]), true);
+        t.strictEqual(bar.foos.size, 2);
         t.strictEqual(bar.foos.length, 2);
         t.type(bar.foos[0], Item);
         t.type(bar.foos[1], Item);

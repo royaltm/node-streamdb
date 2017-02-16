@@ -15,7 +15,7 @@ const Primitive = require('../lib/collection/schema/types').primitive;
 test("DB", suite => {
 
   suite.test("should create database with many to many relations", t => {
-    t.plan(157);
+    t.plan(159);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -97,7 +97,9 @@ test("DB", suite => {
         t.type(item.bars, ManyToManySet);
         t.type(item.bars.ary, Array);
         t.strictEqual(item.bars.length, 1);
+        t.strictEqual(item.bars.size, 1);
         t.strictEqual(item.bars[0], bar);
+        t.strictEqual(item.bars.has(bar), true);
         t.type(bar.foos, ManyToManySet);
         t.type(bar.foos.ary, Array);
         t.strictEqual(bar.foos.length, 1);
