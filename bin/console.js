@@ -58,9 +58,8 @@ createRepl().then(repl => {
       });
 
       repl.resetDatabasePrompt();
-      repl.lineParser.reset();
-      repl.bufferedCommand = '';
-      repl.displayPrompt();
+
+      prompt(repl);
 
     }).catch(err => console.warn(err.stack));
 
