@@ -146,7 +146,6 @@ test("types", suite => {
     t.throws(() => new Blob(schema).validate(null, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
     t.throws(() => new Blob(schema).validate(false, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
     t.throws(() => new Blob(schema).validate(true, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
-    t.throws(() => new Blob(schema).validate('xxx', {[Symbol.for("name")]: 'foo'}), new TypeError("Invalid hex string"));
     t.throws(() => new Blob(schema).validate(0, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
     t.throws(() => new Blob(schema).validate(1, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));
     t.throws(() => new Blob(schema).validate({}, {[Symbol.for("name")]: 'foo'}), new TypeError("foo: property needs to be a buffer or a properly encoded string"));

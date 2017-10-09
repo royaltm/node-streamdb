@@ -240,7 +240,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(99);
+    t.plan(97);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
@@ -402,8 +402,6 @@ test("DB", suite => {
         item.scal = "xxx";
         item.other.nested.flag = false;
         item.unschemed = "rarara";
-        t.throws(() => { item.blob = "foo"; }, new TypeError('Invalid hex string'));
-        t.throws(() => db.collections.test.update(item, {blob: "foo"}), new TypeError('Invalid hex string'));
         t.throws(() => { item.blob = null; }, new TypeError('test[].blob: property needs to be a buffer or a properly encoded string'));
         t.throws(() => db.collections.test.update(item, {blob: null}), new TypeError('test[].blob: property needs to be a buffer or a properly encoded string'));
         t.throws(() => { item.other.nested.flag = null; }, new TypeError('test[].other.nested.flag: property needs to be a boolean'));
