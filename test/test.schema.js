@@ -497,7 +497,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'bazzzz', enum: "bar", blob: Buffer.alloc(0), scal: true, time: new Date(2016, 10, 25, 11, 45, 42, 500), other: {nested: {count: 111, flag: true}}, xxx: [1,'3',2], xxxset: [1,3,2]});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'bazzzz', enum: "bar", blob: Buffer.alloc(0), scal: true, time: new Date(2016, 10, 25, 11, 45, 42, 500), other: {nested: {count: 111, flag: true}}, xxx: [1,'3',2], xxxset: new Set([1,3,2])});
         db.collections.test.subtract(item, 'name', 'baz')
         db.collections.test.subtract(item, 'time', +new Date(2016, 10, 25, 11, 45, 42, 500))
         db.collections.test.subtract(item, 'other.nested.count', 101);
@@ -510,7 +510,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'zzz', enum: "bar", blob: Buffer.alloc(0), scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}, xxx: [1,2], xxxset: [1,2]});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'zzz', enum: "bar", blob: Buffer.alloc(0), scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}, xxx: [1,2], xxxset: new Set([1,2])});
         t.strictEqual(db.collections.test.size, 1);
         return db.collections.test.updateAndSave(item, {});
       })
