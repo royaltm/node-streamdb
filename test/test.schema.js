@@ -9,6 +9,8 @@ const { thisSym: this$ } = require('../lib/collection/symbols');
 
 const itemKlass$ = Symbol.for("itemKlass");
 
+const genIdent = require('../lib/id').genIdent;
+
 const Primitive = require('../lib/collection/schema/types').primitive;
 const Enum = require('../lib/collection/schema/types').enum;
 const Blob = require('../lib/collection/schema/types').blob;
@@ -526,7 +528,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with simple relation", t => {
-    t.plan(55);
+    t.plan(56);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -580,7 +582,7 @@ test("DB", suite => {
 
     db.stream.pipe(db.stream);
     return db.writable.then(db => {
-      var barid, fooid;
+      var barid, fooid, fooid2 = genIdent();
       return db.collections.foos.createAndSave({name: "meh", value: -50})
       .then(item => {
         t.type(item, Item);
@@ -597,11 +599,12 @@ test("DB", suite => {
         t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: fooid, name: "meh", value: -50, bar: barid});
         t.deepEqual(item.bar.toJSON(), {_id: barid, counter: 0});
         t.strictEqual(item.bar, db.collections.bars[barid]);
-        return db.collections.foos.createAndSave({name: "woof!", bar: item.bar});
+        return db.collections.foos.createAndSave({_id: fooid2, name: "woof!", bar: item.bar});
       })
       .then(item => {
         t.type(item, Item);
         t.notStrictEqual(item._id, fooid);
+        t.strictEqual(item._id, fooid2);
         t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: item._id, name: "woof!", bar: barid});
         t.deepEqual(item.bar.toJSON(), {_id: barid, counter: 0});
         var bar = db.collections.bars[barid];

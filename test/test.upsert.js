@@ -8,6 +8,7 @@ const Item = require('../lib/collection/item').Item;
 const $this = Symbol.for('this');
 const $itemKlass = require('../lib/collection/schema').itemKlassSym;
 const isIdent = require('../lib/id').isIdent;
+const genIdent = require('../lib/id').genIdent;
 const Primitive = require('../lib/collection/schema/types').primitive;
 const Enum = require('../lib/collection/schema/types').enum;
 
@@ -18,7 +19,7 @@ const { UniqueConstraintViolationError } = require('../lib/errors');
 test("DB", suite => {
 
   suite.test("should create database with unique index", t => {
-    t.plan(5+51);
+    t.plan(5+52);
     var db = new DB({schema: {
       users: {
         login: {type: String, required: true, unique: true},
@@ -60,12 +61,12 @@ test("DB", suite => {
 
     db.stream.pipe(db.stream);
 
-    var user1id, group1id, role1id;
+    var user1id = genIdent(), group1id, role1id;
 
     return db.writable.then(db => {
       t.throws(() => db.collections.users.upsert({login: "foo"}, "bzzzz"), new TypeError('upsert: mode must be one of: "replace", "merge" or "ignore"'));
 
-      user1id = db.collections.users.upsert({login: "foo", name: "Foo Bar"});
+      t.strictEqual(user1id, db.collections.users.upsert({_id: user1id, login: "foo", name: "Foo Bar"}));
       group1id = db.collections.groups.upsert({name: "group1", description: "The First Group"}, "merge");
       role1id = db.collections.roles.upsert({group: group1id, user: user1id}, "ignore");
 
