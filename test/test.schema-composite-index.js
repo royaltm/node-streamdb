@@ -364,12 +364,12 @@ test("DB", suite => {
   });
 
   suite.test("should create database with composite unique index over relations", t => {
-    t.plan(98 + 559);
+    t.plan(87 + 620);
     var db = new DB({schema: {
       foos: {
         bar: {hasOne: {collection: "bars", hasMany: "foos"}},
         barone: {hasOne: {collection: "bars", hasOne: "foo"}},
-        barsome: {hasOne: {collection: "bars", hasMany: "otherfoos"}},
+        barsome: {hasOne: {collection: "bars"}},
         barattr: {unique: false, components: ["bar", "attr"]},
         bartrip: {components: ["bar", "barone", "barsome"]},
         bargrip: ["bar", "barsome"],
@@ -384,7 +384,7 @@ test("DB", suite => {
       foos: {
         bar: {hasOne: {collection: "bars", hasMany: "foos"}},
         barone: {hasOne: {collection: "bars", hasOne: "foo"}},
-        barsome: {hasOne: {collection: "bars", hasMany: "otherfoos"}},
+        barsome: {hasOne: {collection: "bars"}},
         barattr: {unique: false, components: ["bar", "attr"]},
         bartrip: {unique: false, components: ["bar", "barone", "barsome"]},
         bargrip: {unique: false, components: ["bar", "barsome"]},
@@ -434,14 +434,14 @@ test("DB", suite => {
     t.type(db.collections.foos[Symbol.for('schema')].barone.writePropertySymbol, 'symbol');
 
     t.strictSame(Object.keys(db.collections.foos[Symbol.for('schema')].barsome),
-      ['name', 'required', 'type', 'collection', 'klass', 'foreign', 'hasOne',
+      ['name', 'required', 'type', 'collection', 'klass', 'hasOne',
        'writePropertySymbol', 'readPropertySymbol', 'prop']);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.name, 'barsome');
     t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.required, false);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.type, "bars");
     t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.collection, db.collections.bars[this$]);
     t.type(db.collections.foos[Symbol.for('schema')].barsome.klass.prototype, Item);
-    t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.foreign, 'otherfoos');
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.foreign, undefined);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.hasOne, true);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].barsome.prop, 'barsome');
     t.notStrictEqual(db.collections.foos[Symbol.for('schema')].barsome.readPropertySymbol,
@@ -467,7 +467,7 @@ test("DB", suite => {
     t.strictEqual(db.collections.foos[Symbol.for('schema')].attr.indexComponentCount, 2);
     t.strictSame(db.collections.foos[Symbol.for('schema')].attr.compositeIndex, new CompositeMultiValueIndex(2));
 
-    t.strictSame(Object.keys(db.collections.bars[Symbol.for('schema')]), ["foos", "foo", "otherfoos", "value"]);
+    t.strictSame(Object.keys(db.collections.bars[Symbol.for('schema')]), ["foos", "foo", "value"]);
 
     t.strictSame(Object.keys(db.collections.bars[Symbol.for('schema')].foos),
       ['name', 'required', 'type', 'collection', 'klass', 'hasMany',
@@ -497,20 +497,6 @@ test("DB", suite => {
     t.type(db.collections.bars[Symbol.for('schema')].foo.readPropertySymbol, 'symbol');
     t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.writePropertySymbol, undefined);
 
-    t.strictSame(Object.keys(db.collections.bars[Symbol.for('schema')].otherfoos),
-      ['name', 'required', 'type', 'collection', 'klass', 'hasMany',
-       'readPropertySymbol', 'primary', 'prop']);
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.name, "otherfoos");
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.prop, "otherfoos");
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.required, false);
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.type, "foos");
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.collection, db.collections.foos[this$]);
-    t.type(db.collections.bars[Symbol.for('schema')].otherfoos.klass.prototype, Item);
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.primary, "barsome");
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.hasMany, true);
-    t.type(db.collections.bars[Symbol.for('schema')].otherfoos.readPropertySymbol, 'symbol');
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].otherfoos.writePropertySymbol, undefined);
-
     t.strictSame(Object.keys(db.collections.bars[Symbol.for('schema')].value),
       ['name', 'required', 'type', 'unique', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
     t.strictEqual(db.collections.bars[Symbol.for('schema')].value.name, 'value');
@@ -536,7 +522,7 @@ test("DB", suite => {
       .then(item => {
         t.strictEqual(db.collections.bars.size, 3);
         t.type(item, Item);
-        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: bars[2], value: 3, foos: [], otherfoos: []});
+        t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: bars[2], value: 3, foos: []});
 
         return db.collections.foos.createAndSave({bar: bars[0], barone: bars[1], barsome: bars[2]});
       }).then(item => {
@@ -550,8 +536,6 @@ test("DB", suite => {
         t.strictEqual(item.barone, bar2 = db.collections.bars.by.value.get(2));
         t.strictEqual(bar2.foo, item);
         t.strictEqual(item.barsome, bar3 = db.collections.bars.by.value.get(3));
-        t.strictEqual(bar3.otherfoos.count(), 1);
-        t.strictEqual(bar3.otherfoos.first(), item);
 
         t.strictEqual(db.collections.foos.by.barattr.size, 1);
         t.strictEqual(db.collections.foos.by.barattr.count(), 1);
@@ -616,8 +600,6 @@ test("DB", suite => {
         t.strictEqual(item.barsome, bar3);
         t.strictEqual(bar1.foos.count(), 2);
         t.strictEqual(bar1.foos.toArray()[1], item);
-        t.strictEqual(bar3.otherfoos.count(), 2);
-        t.strictEqual(bar3.otherfoos.toArray()[1], item);
         t.strictEqual(db.collections.foos.by.barattr.size, 1);
         t.strictEqual(db.collections.foos.by.barattr.count(), 2);
         t.strictEqual(db.collections.foos.by.barattr.first(), item1);
@@ -680,10 +662,6 @@ test("DB", suite => {
         t.strictEqual(bar1.foos.first(), db.collections.foos[0]);
         t.strictEqual(bar1.foos.toArray()[2], item);
         t.strictEqual(item.barsome, bar2);
-        t.strictEqual(bar2.otherfoos.count(), 1);
-        t.strictEqual(bar2.otherfoos.first(), item);
-        t.strictEqual(bar3.otherfoos.count(), 2);
-        t.strictEqual(bar3.otherfoos.toArray()[1], item2);
         t.strictEqual(item.bar, bar1);
         t.strictEqual(db.collections.foos.by.barattr.size, 1);
         t.strictEqual(db.collections.foos.by.barattr.count(), 3);
@@ -771,10 +749,6 @@ test("DB", suite => {
         t.strictEqual(item1.bar, bar1);
         t.strictEqual(item1.barone, undefined);
         t.strictEqual(item1.barsome, undefined);
-        t.strictEqual(bar3.otherfoos.count(), 1);
-        t.strictEqual(bar3.otherfoos.first(), item2);
-        t.strictEqual(bar2.otherfoos.count(), 1);
-        t.strictEqual(bar2.otherfoos.first(), item3);
         t.strictEqual(db.collections.foos.by.barattr.size, 1);
         t.strictEqual(db.collections.foos.by.barattr.count(), 3);
         t.strictEqual(db.collections.foos.by.barattr.first(), item2);
@@ -867,8 +841,6 @@ test("DB", suite => {
         t.strictEqual(item3.bar, bar1);
         t.strictEqual(item3.barone, undefined);
         t.strictEqual(item3.barsome, undefined);
-        t.strictEqual(bar3.otherfoos.count(), 1);
-        t.strictEqual(bar3.otherfoos.first(), item2);
         t.strictEqual(db.collections.foos.by.barattr.size, 1);
         t.strictEqual(db.collections.foos.by.barattr.count(), 3);
         t.strictEqual(db.collections.foos.by.barattr.first(), item2);
@@ -911,21 +883,23 @@ test("DB", suite => {
         t.strictEqual(db.collections.foos.by.bargrip.count(), 3);
         t.strictEqual(db.collections.foos.by.bargrip.first(), item1);
         t.strictEqual(db.collections.foos.by.bargrip.toArray()[0], item1);
-        t.strictEqual(db.collections.foos.by.bargrip.toArray()[1], item3);
-        t.strictEqual(db.collections.foos.by.bargrip.toArray()[2], item2);
+        t.strictEqual(db.collections.foos.by.bargrip.toArray()[1], item2);
+        t.strictEqual(db.collections.foos.by.bargrip.toArray()[2], item3);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar1).count(), 3);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar1).first(), item1);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar1).toArray()[0], item1);
-        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).toArray()[1], item3);
-        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).toArray()[2], item2);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).toArray()[1], item2);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).toArray()[2], item3);
         t.strictEqual(db.collections.foos.by.bargrip.get(bars[1]).size, 0);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar3).size, 0);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar1, undefined).count(), 0);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bar3).count(), 1);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bar3).first(), item2);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bar3).toArray()[0], item2);
-        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).count(), 0);
-        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).toArray().length, 0);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).count(), 1);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).toArray().length, 1);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).first(), item3);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).toArray()[0], item3);
         t.strictEqual(db.collections.foos.by.bargrip.get(bars[1], undefined).count(), 0);
         t.strictEqual(db.collections.foos.by.bargrip.get(bar3, undefined).count(), 0);
 
@@ -954,7 +928,85 @@ test("DB", suite => {
         t.strictEqual(item3.bar, bar1);
         t.strictEqual(item3.barone, undefined);
         t.strictEqual(item3.barsome, undefined);
-        t.strictEqual(bar3.otherfoos.count(), 0);
+        t.strictEqual(db.collections.foos.by.barattr.size, 1);
+        t.strictEqual(db.collections.foos.by.barattr.count(), 2);
+        t.strictEqual(db.collections.foos.by.barattr.first(), item3);
+        t.strictEqual(db.collections.foos.by.barattr.toArray()[0], item3);
+        t.strictEqual(db.collections.foos.by.barattr.toArray()[1], item1);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1).count(), 2);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1).first(), item3);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1).toArray()[0], item3);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1).toArray()[1], item1);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1, undefined).count(), 0);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1, null).count(), 2);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1, null).first(), item3);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1, null).toArray()[0], item3);
+        t.strictEqual(db.collections.foos.by.barattr.get(bar1, null).toArray()[1], item1);
+        t.strictEqual(db.collections.foos.by.bartrip.size, 1);
+        t.strictEqual(db.collections.foos.by.bartrip.count(), 2);
+        t.strictEqual(db.collections.foos.by.bartrip.first(), item3);
+        t.strictEqual(db.collections.foos.by.bartrip.toArray()[0], item3);
+        t.strictEqual(db.collections.foos.by.bartrip.toArray()[1], item1);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1).count(), 2);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1).first(), item3);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1).toArray()[0], item3);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1).toArray()[1], item1);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bars[1]).size, 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar3).size, 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1, undefined).count(), 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1, bars[1]).count(), 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1, bar1).size, 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1, bar3).size, 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1, bars[1], bar3).count(), 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1._id, bars[1], bar3._id).count(), 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1, bars[1], bar1).count(), 0);
+        t.strictEqual(db.collections.foos.by.bartrip.get(bar1, bars[1], bars[1]).count(), 0);
+        t.strictEqual(db.collections.foos.by.bargrip.size, 1);
+        t.strictEqual(db.collections.foos.by.bargrip.count(), 2);
+        t.strictEqual(db.collections.foos.by.bargrip.first(), item1);
+        t.strictEqual(db.collections.foos.by.bargrip.toArray()[0], item1);
+        t.strictEqual(db.collections.foos.by.bargrip.toArray()[1], item3);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).count(), 2);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).first(), item1);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).toArray()[0], item1);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1).toArray()[1], item3);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bars[1]).size, 0);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar3).size, 0);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, undefined).count(), 0);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bar3).count(), 0);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bar3).toArray().length, 0);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).count(), 1);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).toArray().length, 1);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).first(), item3);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar1, bars[1]).toArray()[0], item3);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bars[1], undefined).count(), 0);
+        t.strictEqual(db.collections.foos.by.bargrip.get(bar3, undefined).count(), 0);
+
+        delete item3.barsome;
+        return db.save();
+      }).then(item3 => {
+        t.type(item3, Item);
+        t.strictEqual(item3, db.collections.foos[1]);
+        t.strictEqual(db.collections.bars.size, 2);
+        t.strictEqual(db.collections.bars[0], bar1);
+        t.strictEqual(db.collections.bars[1], bar3);
+        t.strictEqual(db.collections.foos.size, 2);
+        t.strictEqual(db.collections.foos[2], undefined);
+        var item1 = db.collections.foos[0];
+        t.deepEqual(JSON.parse(JSON.stringify(item1)), {_id: item1._id, bar: bars[0], attr: null});
+        t.strictEqual(item1.bar, bar1);
+        t.strictEqual(item1.barone, undefined);
+        t.strictEqual(item1.barsome, undefined);
+        t.strictEqual(bar1.foo, undefined);
+        t.strictEqual(bar1.foos.size, 2);
+        t.strictEqual(bar1.foos.count(), 2);
+        t.strictEqual(bar1.foos.first(), item3);
+        t.strictEqual(bar1.foos.toArray()[1], item1);
+        t.type(item3, Item);
+        t.deepEqual(JSON.parse(JSON.stringify(item3)), {_id: item3._id, bar: bars[0], attr: null});
+        t.strictEqual(item3.bar, bar1);
+        t.strictEqual(item3.barone, undefined);
+        t.strictEqual(item3.barsome, undefined);
         t.strictEqual(db.collections.foos.by.barattr.size, 1);
         t.strictEqual(db.collections.foos.by.barattr.count(), 2);
         t.strictEqual(db.collections.foos.by.barattr.first(), item3);

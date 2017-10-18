@@ -557,7 +557,7 @@ test("DB", suite => {
       "type": new Primitive()
     });
     t.strictSame(Object.getOwnPropertyNames(db.collections.foos[Symbol.for('schema')].bar),
-      ['name', 'required', 'type', 'collection', 'klass', 'hasOne', 'readPropertySymbol', 'prop']);
+      ['name', 'required', 'type', 'collection', 'klass', 'hasOne', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.name, "bar");
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.required, false);
@@ -566,7 +566,7 @@ test("DB", suite => {
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
     t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
-    t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, undefined);
+    t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, 'symbol');
 
     t.strictSame(Object.getOwnPropertyNames(db.collections.bars[Symbol.for('schema')]), ['counter']);
     t.strictSame(db.collections.bars[Symbol.for('schema')].counter, {
