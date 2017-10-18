@@ -16,14 +16,14 @@ const { UniqueConstraintViolationError } = require('../lib/errors');
 test("DB", suite => {
 
   suite.test("should create database with composite index", t => {
-    t.plan(61+192);
+    t.plan(63+224);
     var db = new DB({schema: {
       test: {
         bool: {type: Boolean, unique: true},
         serial: {type: Number},
         name: {type: String, index: true, unique: false},
         time: Date,
-        multi: ["serial", "multi"],
+        multi: ["serial", "multi", "time"],
         duo: {unique: false, components: ["multi", "name"]},
       }
     }});
@@ -35,7 +35,7 @@ test("DB", suite => {
         serial: {type: Number},
         name: {type: String, index: true, unique: false},
         time: {type: Date},
-        multi: {unique: false, components: ["serial", "multi"]},
+        multi: {unique: false, components: ["serial", "multi", "time"]},
         duo: {unique: false, components: ["multi", "name"]},
       }
     });
@@ -47,12 +47,13 @@ test("DB", suite => {
       ['multi', 'duo']);
 
     t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].bool),
-      ['name', 'required', 'type', 'unique', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
+      ['name', 'required', 'type', 'writePropertySymbol', 'readPropertySymbol', 'indexName', 'unique', 'prop']);
     t.strictEqual(db.collections.test[Symbol.for('schema')].bool.name, 'bool');
     t.strictEqual(db.collections.test[Symbol.for('schema')].bool.required, false);
     t.strictEqual(db.collections.test[Symbol.for('schema')].bool.type, Boolean);
-    t.strictEqual(db.collections.test[Symbol.for('schema')].bool.prop, 'bool');
+    t.strictEqual(db.collections.test[Symbol.for('schema')].bool.indexName, 'bool');
     t.strictSame(db.collections.test[Symbol.for('schema')].bool.unique, new UniqueIndex());
+    t.strictEqual(db.collections.test[Symbol.for('schema')].bool.prop, 'bool');
     t.strictEqual(db.collections.test[Symbol.for('schema')].bool.readPropertySymbol,
       db.collections.test[Symbol.for('schema')].bool.writePropertySymbol);
     t.type(db.collections.test[Symbol.for('schema')].bool.readPropertySymbol, 'symbol');
@@ -73,8 +74,8 @@ test("DB", suite => {
     t.strictEqual(db.collections.test[Symbol.for('schema')].multi.indexComponentName, 'multi');
     t.type(db.collections.test[Symbol.for('schema')].multi.compositePropertySymbol, 'symbol');
     t.strictEqual(db.collections.test[Symbol.for('schema')].multi.indexComponentIdx, 1);
-    t.strictEqual(db.collections.test[Symbol.for('schema')].multi.indexComponentCount, 2);
-    t.strictSame(db.collections.test[Symbol.for('schema')].multi.compositeIndex, new CompositeMultiValueIndex(2));
+    t.strictEqual(db.collections.test[Symbol.for('schema')].multi.indexComponentCount, 3);
+    t.strictSame(db.collections.test[Symbol.for('schema')].multi.compositeIndex, new CompositeMultiValueIndex(3));
 
     t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].serial),
       ['name', 'required', 'type', 'prop', 'writePropertySymbol', 'readPropertySymbol',
@@ -91,8 +92,8 @@ test("DB", suite => {
     t.strictEqual(db.collections.test[Symbol.for('schema')].serial.indexComponentName, 'serial');
     t.type(db.collections.test[Symbol.for('schema')].serial.compositePropertySymbol, 'symbol');
     t.strictEqual(db.collections.test[Symbol.for('schema')].serial.indexComponentIdx, 0);
-    t.strictEqual(db.collections.test[Symbol.for('schema')].serial.indexComponentCount, 2);
-    t.strictSame(db.collections.test[Symbol.for('schema')].serial.compositeIndex, new CompositeMultiValueIndex(2));
+    t.strictEqual(db.collections.test[Symbol.for('schema')].serial.indexComponentCount, 3);
+    t.strictSame(db.collections.test[Symbol.for('schema')].serial.compositeIndex, new CompositeMultiValueIndex(3));
 
     t.strictEqual(db.collections.test[Symbol.for('schema')].multi.compositeIndex,
                    db.collections.test[Symbol.for('schema')].serial.compositeIndex);
@@ -100,19 +101,20 @@ test("DB", suite => {
                    db.collections.test[Symbol.for('schema')].serial.compositePropertySymbol);
 
     t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].name),
-      ['name', 'required', 'type', 'index', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
+      ['name', 'required', 'type', 'writePropertySymbol', 'readPropertySymbol', 'indexName', 'index', 'prop']);
     t.strictEqual(db.collections.test[Symbol.for('schema')].name.name, 'name');
     t.strictEqual(db.collections.test[Symbol.for('schema')].name.required, false);
     t.strictEqual(db.collections.test[Symbol.for('schema')].name.type, String);
-    t.strictEqual(db.collections.test[Symbol.for('schema')].name.prop, 'name');
+    t.strictEqual(db.collections.test[Symbol.for('schema')].name.indexName, 'name');
     t.strictSame(db.collections.test[Symbol.for('schema')].name.index, new MultiValueIndex());
+    t.strictEqual(db.collections.test[Symbol.for('schema')].name.prop, 'name');
     t.notStrictEqual(db.collections.test[Symbol.for('schema')].name.readPropertySymbol,
       db.collections.test[Symbol.for('schema')].name.writePropertySymbol);
     t.type(db.collections.test[Symbol.for('schema')].name.readPropertySymbol, 'symbol');
     t.type(db.collections.test[Symbol.for('schema')].name.writePropertySymbol, 'symbol');
 
     t.strictSame(Object.keys(db.collections.test[Symbol.for('schema')].time),
-      ['name', 'required', 'type', 'readPropertySymbol', 'prop']);
+      ['name', 'required', 'type', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
     t.strictEqual(db.collections.test[Symbol.for('schema')].time.name, 'time');
     t.strictEqual(db.collections.test[Symbol.for('schema')].time.required, false);
     t.strictEqual(db.collections.test[Symbol.for('schema')].time.type, Date);
@@ -120,7 +122,7 @@ test("DB", suite => {
     t.notStrictEqual(db.collections.test[Symbol.for('schema')].time.readPropertySymbol,
       db.collections.test[Symbol.for('schema')].time.writePropertySymbol);
     t.type(db.collections.test[Symbol.for('schema')].time.readPropertySymbol, 'symbol');
-    t.strictEqual(db.collections.test[Symbol.for('schema')].time.writePropertySymbol, undefined);
+    t.type(db.collections.test[Symbol.for('schema')].time.writePropertySymbol, 'symbol');
 
     t.strictEqual(db.collections.test.size, 0);
 
@@ -164,6 +166,10 @@ test("DB", suite => {
       t.strictEqual(db.collections.test.by.time, undefined);
       t.strictEqual(db.collections.test.by.multi.size, 1);
       t.strictEqual(db.collections.test.by.multi.toArray()[0], item);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).size, 1);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).count(), 1);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).first(), item);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).toArray()[0], item);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').size, 1);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').first(), item);
@@ -182,12 +188,12 @@ test("DB", suite => {
       item.serial = 42;
       item.name = 'foo';
       item.multi= 'm';
-      item.time = new Date(0);
+      item.time = new Date(2017,0,1);
       return db.save();
     }).then(item => {
       t.strictEqual(db.collections.test.size, 2);
       t.type(item, Item);
-      t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: itemid, bool: true, multi: 'm', serial: 42, name: 'foo', time: new Date(0).toJSON()});
+      t.deepEqual(JSON.parse(JSON.stringify(item)), {_id: itemid, bool: true, multi: 'm', serial: 42, name: 'foo', time: new Date(2017,0,1).toJSON()});
       t.strictEqual(db.collections.test.by.bool.size, 2);
       t.strictEqual(db.collections.test.by.bool.get(false), db.collections.test[1]);
       t.strictEqual(db.collections.test.by.bool.get(true), item);
@@ -207,6 +213,10 @@ test("DB", suite => {
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').count(), 2);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').first(), db.collections.test[1]);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').toArray()[1], item);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).size, 2);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).count(), 2);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).first(), db.collections.test[1]);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).toArray()[1], item);
       t.strictEqual(db.collections.test.by.duo.size, 1);
       t.strictEqual(db.collections.test.by.duo.count(), 2);
       t.strictEqual(db.collections.test.by.duo.first(), db.collections.test[1]);
@@ -246,10 +256,16 @@ test("DB", suite => {
       t.strictEqual(db.collections.test.by.multi.get(42).first(), db.collections.test[1]);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').first(), db.collections.test[1]);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).size, 1);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).count(), 1);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).first(), db.collections.test[1]);
       t.strictEqual(db.collections.test.by.multi.get(77).count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(77).first(), item);
       t.strictEqual(db.collections.test.by.multi.get(77, 'm').count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(77, 'm').first(), item);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1)).size, 1);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1).getTime()).count(), 1);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1)).first(), item);
       t.strictEqual(db.collections.test.by.duo.size, 1);
       t.strictEqual(db.collections.test.by.duo.count(), 2);
       t.strictEqual(db.collections.test.by.duo.first(), db.collections.test[1]);
@@ -282,10 +298,15 @@ test("DB", suite => {
       t.strictEqual(db.collections.test.by.multi.first(), item);
       t.strictEqual(db.collections.test.by.multi.get(42).count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').count(), 0);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).size, 0);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(77).count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(77).first(), item);
       t.strictEqual(db.collections.test.by.multi.get(77, 'm').count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(77, 'm').first(), item);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1)).size, 1);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1).getTime()).count(), 1);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1)).first(), item);
       t.strictEqual(db.collections.test.by.duo.size, 1);
       t.strictEqual(db.collections.test.by.duo.count(), 1);
       t.strictEqual(db.collections.test.by.duo.first(), item);
@@ -316,10 +337,17 @@ test("DB", suite => {
       t.strictEqual(db.collections.test.by.multi.first(), item);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(42).count(), 0);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).size, 0);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(77).count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(77).first(), item);
       t.strictEqual(db.collections.test.by.multi.get(77, 'm').count(), 1);
       t.strictEqual(db.collections.test.by.multi.get(77, 'm').first(), item);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1)).size, 0);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1).getTime()).count(), 0);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(2016,10,30)).size, 1);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(2016,10,30).getTime()).count(), 1);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(2016,10,30)).first(), item);
       t.strictEqual(db.collections.test.by.duo.size, 1);
       t.strictEqual(db.collections.test.by.duo.count(), 1);
       t.strictEqual(db.collections.test.by.duo.first(), item);
@@ -353,8 +381,14 @@ test("DB", suite => {
       t.strictEqual(db.collections.test.by.multi.count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(42, 'm').count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(42).count(), 0);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1)).size, 0);
+      t.strictEqual(db.collections.test.by.multi.get(42, 'm', new Date(2017,0,1).getTime()).count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(77, 'm').count(), 0);
       t.strictEqual(db.collections.test.by.multi.get(77).count(), 0);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1)).size, 0);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(1).getTime()).count(), 0);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(2016,10,30)).size, 0);
+      t.strictEqual(db.collections.test.by.multi.get(77, 'm', new Date(2016,10,30).getTime()).count(), 0);
       t.strictEqual(db.collections.test.by.duo.size, 0);
       t.strictEqual(db.collections.test.by.duo.count(), 0);
       t.strictEqual(db.collections.test.by.duo.get('m', 'foo').count(), 0);
@@ -364,7 +398,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with composite unique index over relations", t => {
-    t.plan(87 + 620);
+    t.plan(88 + 620);
     var db = new DB({schema: {
       foos: {
         bar: {hasOne: {collection: "bars", hasMany: "foos"}},
@@ -498,12 +532,13 @@ test("DB", suite => {
     t.strictEqual(db.collections.bars[Symbol.for('schema')].foo.writePropertySymbol, undefined);
 
     t.strictSame(Object.keys(db.collections.bars[Symbol.for('schema')].value),
-      ['name', 'required', 'type', 'unique', 'writePropertySymbol', 'readPropertySymbol', 'prop']);
+      ['name', 'required', 'type', 'writePropertySymbol', 'readPropertySymbol', 'indexName', 'unique', 'prop']);
     t.strictEqual(db.collections.bars[Symbol.for('schema')].value.name, 'value');
     t.strictEqual(db.collections.bars[Symbol.for('schema')].value.required, true);
     t.strictEqual(db.collections.bars[Symbol.for('schema')].value.type, Number);
-    t.strictEqual(db.collections.bars[Symbol.for('schema')].value.prop, 'value');
     t.strictSame(db.collections.bars[Symbol.for('schema')].value.unique, new UniqueIndex());
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].value.prop, 'value');
+    t.strictEqual(db.collections.bars[Symbol.for('schema')].value.indexName, 'value');
     t.strictEqual(db.collections.bars[Symbol.for('schema')].value.readPropertySymbol,
       db.collections.bars[Symbol.for('schema')].value.writePropertySymbol);
     t.type(db.collections.bars[Symbol.for('schema')].value.readPropertySymbol, 'symbol');
