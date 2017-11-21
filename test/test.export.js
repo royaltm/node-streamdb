@@ -67,11 +67,11 @@ const exported = [
     location: {ra: 19, dec: -25},
     area: '867 sq. deg.',
     name: 'Sagittarius',
-    createdAt: new Date('2016-11-25T23:06:20.659Z'),
     stars: [
       new Ident('5838c3ec26f27e1f64abbf87'),
       new Ident('5838c3ec26f27e1f64abbf89'),
-      new Ident('5838c3ec26f27e1f64abbf8a')] } ],
+      new Ident('5838c3ec26f27e1f64abbf8a')],
+    createdAt: new Date('2016-11-25T23:06:20.659Z') } ],
   [ 'stars', '!', null, null, null ],
   [ 'stars', '=', new Ident('5838c3ec26f27e1f64abbf87'), '', {
     bayer: 'α Sagittarii',

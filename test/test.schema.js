@@ -18,7 +18,7 @@ const Blob = require('../lib/collection/schema/types').blob;
 test("DB", suite => {
 
   suite.test("should create database with type constraint schema", t => {
-    t.plan(18+115+2);
+    t.plan(26+115+2);
     var db = new DB({schema: {
       test: {
         name: String,
@@ -107,6 +107,16 @@ test("DB", suite => {
     db.stream.pipe(db.stream);
 
     return db.writable.then(db => {
+      t.throws(() => { db.collections.test.validate()}, new TypeError("test[].other.nested.flag: property is required"));
+      t.throws(() => { db.collections.test.validate({})}, new TypeError("test[].other.nested.flag: property is required"));
+      t.throws(() => { db.collections.test.validate({_id: 'xxx', other: {nested: {flag: true}}})}, new TypeError("test: reserved property name: _id"));
+      t.deepEquals(db.collections.test.validate({other: {nested: {flag: true}}}), {other: {nested: {flag: true}}});
+      var detitem = db.collections.test.makeDetachedItem({other: {nested: {flag: true}}}).toJSON();
+      t.deepEquals(Object.keys(detitem), ['_id', 'other']);
+      t.deepEquals(detitem.other, {nested: {flag: true}});
+      t.type(detitem._id, 'string');
+      t.matches(detitem._id, /[0-9a-f]{24}/);
+
       return db.collections.test.createAndSave({name: 'foo', time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}})
       .then(item => {
         t.type(item, Item);
@@ -242,7 +252,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(97);
+    t.plan(105);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
@@ -385,6 +395,23 @@ test("DB", suite => {
 
     db.stream.pipe(db.stream);
     return db.writable.then(db => {
+      t.throws(() => { db.collections.test.validate()}, new TypeError("test[].scal: property is required"));
+      t.throws(() => { db.collections.test.validate({})}, new TypeError("test[].scal: property is required"));
+      t.throws(() => { db.collections.test.validate({_id: 'xxx', scal: 1})}, new TypeError("test: reserved property name: _id"));
+      t.deepEquals(db.collections.test.validate({scal: 1}), {
+        name: "foo",
+        enum: "bar",
+        blob: Buffer.from(''),
+        scal: 1,
+        time: new Date(2016,6,12,20,42).getTime(),
+        other: { nested: {count: 10, flag: true}}
+      });
+      var detitem = db.collections.test.makeDetachedItem({scal: true, name: "foofoo", other: {nested: {flag: false}}}).toJSON();
+      t.deepEquals(Object.keys(detitem), ['_id', 'scal', 'name', 'other', 'enum', 'blob', 'time']);
+      t.deepEquals(detitem.other, {nested: {count: 10, flag: false}});
+      t.type(detitem._id, 'string');
+      t.matches(detitem._id, /[0-9a-f]{24}/);
+
       return db.collections.test.createAndSave({scal: null})
       .then(item => {
         t.type(item, Item);
