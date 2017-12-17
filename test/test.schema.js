@@ -5,8 +5,6 @@ const test = require('tap').test;
 const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 
-const { thisSym: this$ } = require('../lib/collection/symbols');
-
 const itemKlass$ = Symbol.for("itemKlass");
 
 const genIdent = require('../lib/id').genIdent;
@@ -589,9 +587,9 @@ test("DB", suite => {
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.prop, "bar");
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.required, false);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.type, "bars");
-    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[this$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.collection, db.collections.bars[Item.this]);
     t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.hasOne, true);
-    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[this$][itemKlass$]);
+    t.strictEqual(db.collections.foos[Symbol.for('schema')].bar.klass, db.collections.bars[Item.this][itemKlass$]);
     t.type(db.collections.foos[Symbol.for('schema')].bar.readPropertySymbol, 'symbol');
     t.type(db.collections.foos[Symbol.for('schema')].bar.writePropertySymbol, 'symbol');
 

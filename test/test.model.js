@@ -9,7 +9,7 @@ const Item = require('../lib/collection/item').Item;
 test("DB", suite => {
 
   suite.test("should create database with custom models", t => {
-    t.plan(29);
+    t.plan(39);
 
     class Person extends Item {
       constructor() {
@@ -28,6 +28,9 @@ test("DB", suite => {
         return {
           name(value) { if ('string' === typeof value) return value.toUpperCase(); }
         }
+      }
+      static create(name) {
+        return this.collection.create({name: name});
       }
     }
 
@@ -67,17 +70,29 @@ test("DB", suite => {
       }
     });
 
+    t.strictEqual(db.models.people, Person);
+    t.type(db.collections.people.model.prototype, Person);
+    t.type(db.models.animals, 'function');
+    t.type(db.models.animals.prototype, Item);
+    t.type(db.collections.animals.model.prototype, Item);
+    t.strictEqual(db.collections.people.model.prototype[Item.collection], db.collections.people[Item.this]);
+    t.notStrictEqual(db.collections.people.model.prototype[Item.collection], db.collections.people);
+    t.strictEqual(db.collections.people.model.collection, db.collections.people);
+    t.notStrictEqual(db.collections.people.model.collection, db.collections.people[Item.this]);
+    t.strictEqual(db.collections.people.model.collection[Item.this], db.collections.people[Item.this]);
+
     db.stream.pipe(db.stream);
 
-    var animalId;
+    var animalId, personId;
 
     return db.writable.then(db => {
       animalId = db.collections.animals.create({type: "dog", hungry: false});
-      return db.collections.people.createAndSave({name: "Stefan"})
+      personId = db.collections.people.model.create("Stefan");
+      return db.save()
       .then(person => {
         t.type(person, Item);
         t.type(person, Person);
-        t.deepEqual(person.toJSON(), {_id: person._id, name: 'STEFAN', private: 'private'})
+        t.deepEqual(person.toJSON(), {_id: personId, name: 'STEFAN', private: 'private'});
         t.strictEqual(person.name, 'STEFAN');
         t.strictEqual(person.private, 'private');
         t.strictEqual(person.hasName, true);

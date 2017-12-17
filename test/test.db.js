@@ -18,6 +18,7 @@ test("DB", suite => {
     t.type(DB.Item, 'function');
     t.strictEqual(DB.Item, Item);
     t.type(DB.Item.this, 'symbol');
+    t.type(DB.Item.collection, 'symbol');
     t.type(DB.itertools, Object);
     t.strictEqual(DB.itertools, itertools);
     t.type(DB.VersionError, 'function')
