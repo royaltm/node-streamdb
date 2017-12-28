@@ -250,7 +250,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(105);
+    t.plan(107);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
@@ -413,7 +413,7 @@ test("DB", suite => {
       return db.collections.test.createAndSave({scal: null})
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'bar', blob: Buffer.alloc(0), scal: null, time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'bar', blob: '', scal: null, time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}});
         delete item.name;
         delete item.time;
         delete item.other;
@@ -423,7 +423,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'bar', blob: Buffer.alloc(0), scal: 1, time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'bar', blob: '', scal: 1, time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}});
         item.enum = "foo";
         item.blob = "deadbaca";
         item.scal = "xxx";
@@ -439,21 +439,23 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: false}}, unschemed: "rarara"});
+        t.type(item.blob, Buffer);
+        t.deepEqual(item.blob, Buffer.from('deadbaca', 'hex'));
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: 'deadbaca', scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: false}}, unschemed: "rarara"});
 
         item.other.nested = undefined;
         return db.save();
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}, unschemed: "rarara"});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: 'deadbaca', scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}, unschemed: "rarara"});
 
         delete item.other;
         return db.save();
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}, unschemed: "rarara"});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: 'deadbaca', scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 10, flag: true}}, unschemed: "rarara"});
 
         delete item.other.nested.flag;
         item.other.nested.count = 42;
@@ -461,7 +463,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: 'deadbaca', scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
 
         t.throws(() => { item.enum = "baz"; }, new TypeError('enum: property needs to be one of: foo|bar'));
         t.throws(() => db.collections.test.update(item, {enum: "baz"}), new TypeError('test[].enum: property needs to be one of: foo|bar'));
@@ -485,7 +487,7 @@ test("DB", suite => {
         t.strictEqual(err.message, "test[].scal: property is required");
         var item = db.collections.test[0];
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: 'deadbaca', scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
 
         t.throws(() => db.collections.test.replace(item, []), new TypeError("test: property must be an object"));
         t.throws(() => db.collections.test.replace(item, /asd/), new TypeError("test: property must be an object"));
@@ -502,13 +504,13 @@ test("DB", suite => {
         t.strictEqual(err.message, "test[].scal: property is required");
         var item = db.collections.test[0];
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: Buffer.from('deadbaca', 'hex'), scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: 'deadbaca', scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
 
         return db.collections.test.replaceAndSave(item, {scal: true, name: "baz", time: 0, enum: "bar", blob: Buffer.from([1,2,3,4])});
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'baz', enum: "bar", blob: Buffer.from([1,2,3,4]), scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'baz', enum: "bar", blob: '01020304', scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}});
 
         db.collections.test.add(item, 'name', 'zzz')
         db.collections.test.add(item, 'time', +new Date(2016, 10, 25, 11, 45, 42, 500))
@@ -524,7 +526,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'bazzzz', enum: "bar", blob: Buffer.alloc(0), scal: true, time: new Date(2016, 10, 25, 11, 45, 42, 500), other: {nested: {count: 111, flag: true}}, xxx: [1,'3',2], xxxset: new Set([1,3,2])});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'bazzzz', enum: "bar", blob: '', scal: true, time: new Date(2016, 10, 25, 11, 45, 42, 500), other: {nested: {count: 111, flag: true}}, xxx: [1,'3',2], xxxset: new Set([1,3,2])});
         db.collections.test.subtract(item, 'name', 'baz')
         db.collections.test.subtract(item, 'time', +new Date(2016, 10, 25, 11, 45, 42, 500))
         db.collections.test.subtract(item, 'other.nested.count', 101);
@@ -537,7 +539,7 @@ test("DB", suite => {
       })
       .then(item => {
         t.type(item, Item);
-        t.deepEqual(item.toJSON(), {_id: item._id, name: 'zzz', enum: "bar", blob: Buffer.alloc(0), scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}, xxx: [1,2], xxxset: new Set([1,2])});
+        t.deepEqual(item.toJSON(), {_id: item._id, name: 'zzz', enum: "bar", blob: '', scal: true, time: new Date(0), other: {nested: {count: 10, flag: true}}, xxx: [1,2], xxxset: new Set([1,2])});
         t.strictEqual(db.collections.test.size, 1);
         return db.collections.test.updateAndSave(item, {});
       })
