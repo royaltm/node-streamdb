@@ -9,7 +9,7 @@ const Ident = require('../lib/id').Ident;
 test("DB", suite => {
 
   suite.test('should have collections from schema', t => {
-    t.plan(64);
+    t.plan(72);
 
     var db = new DB({schema: {
       _version: '1.2.3',
@@ -43,6 +43,8 @@ test("DB", suite => {
       t.strictEqual(db.collection(name), collection);
       t.strictEqual(collection._db, db);
       t.strictEqual(collection._name, name);
+      t.strictEqual(collection.db, db);
+      t.strictEqual(collection.name, name);
       t.strictEqual(collection.size, 0);
       t.deepEqual(Array.from(collection), []);
       t.deepEqual(Array.from(collection.values()), []);
