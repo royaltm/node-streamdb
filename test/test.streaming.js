@@ -45,7 +45,8 @@ test("DB", suite => {
       t.deepEqual(args[5], {foo: "bar", baz: 2, rabarbar: [1,2,3]});
       updateEvent = true;
     });
-    db.writable.then(o => {
+
+    return db.writable.then(o => {
       t.strictEqual(db.stream.isReadableStreaming, true);
       t.strictEqual(o, db);
       var id = db.collections.test.create({foo: "bar", baz: 2, rabarbar: [1,2,3]});
@@ -71,7 +72,7 @@ test("DB", suite => {
     t.strictEqual(dbMaster.stream.isReadableStreaming, false);
     t.strictEqual(dbClient.stream.isReadableStreaming, false);
 
-    dbMaster.writable.then(db => {
+    return dbMaster.writable.then(db => {
       t.strictEqual(db, dbMaster);
       t.strictEqual(dbMaster.stream.isReadableStreaming, true);
       t.strictEqual(dbClient.stream.isReadableStreaming, false);
@@ -86,8 +87,11 @@ test("DB", suite => {
         dbClient.collections.test.create();
         var promise = dbClient.save();
         t.type(promise, Promise);
-        promise.then(() => t.ok(false));
-        setTimeout(() => t.ok(true), 100);
+        return new Promise((resolve, reject) => {
+          promise.then(() => t.ok(false)).catch(reject);
+          setTimeout(resolve, 100);
+        })
+        .then(() => t.ok(true));
       });
     }).catch(t.threw);
 
@@ -104,7 +108,7 @@ test("DB", suite => {
     t.strictEqual(dbMaster.stream.isReadableStreaming, false);
     t.strictEqual(dbClient.stream.isReadableStreaming, false);
 
-    Promise.all([dbMaster.writable, dbClient.writable]).then(dbs => {
+    return Promise.all([dbMaster.writable, dbClient.writable]).then(dbs => {
       t.strictEqual(dbs[0], dbMaster);
       t.strictEqual(dbs[1], dbClient);
       t.strictEqual(dbMaster.stream.isReadableStreaming, true);
@@ -240,6 +244,47 @@ test("DB", suite => {
       setImmediate(next);
     }).catch(t.threw);
 
+  });
+
+  suite.test("pending", t => {
+    t.plan(24);
+    var db = new DB();
+    var id = db.collections.test.create({foo: 'bar'});
+    t.type(db._spool, Array);
+    t.strictEqual(db._spool.length, 6);
+    t.strictEqual(db._lastIdent, undefined);
+    t.strictEqual(db.autosave, true);
+    db.begin();
+    t.strictEqual(db.autosave, false);
+    t.strictEqual(db._spool, undefined);
+    t.type(db._lastIdent, 'string');
+    t.type(db._lastIdent.length, 24);
+    t.strictEqual(db.stream.pipe(db.stream), db.stream);
+    return db.save()
+    .then(item => {
+      t.type(item, Item);
+      t.strictEqual(item._id, id);
+      t.strictEqual(item.foo, 'bar');
+      t.strictEqual(item.baz, undefined);
+      t.strictEqual(item, db.collections.test[id]);
+      t.strictEqual(db.collections.test.size, 1);
+      t.strictEqual(db._spool, undefined);
+
+      db.collections.test.update(id, {baz: 42});
+      t.type(db._spool, Array);
+      t.strictEqual(db._spool.length, 6);
+      db.clearPending();
+      t.strictEqual(db._spool, undefined);
+      return db.save();
+    })
+    .then(result => {
+      t.strictEqual(result, undefined);
+      t.strictEqual(db.collections.test.size, 1);
+      var item = db.collections.test[id];
+      t.strictEqual(item._id, id);
+      t.strictEqual(item.foo, 'bar');
+      t.strictEqual(item.baz, undefined);
+    }).catch(t.threw);
   });
 
   suite.end();
