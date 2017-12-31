@@ -296,5 +296,77 @@ test("DB", suite => {
     }).catch(t.threw);
   });
 
+  suite.test('update and result events', t => {
+    t.plan(35);
+
+    var id, db = new DB();
+    db.stream.pipe(db.stream);
+    return db.writable.then(db => {
+      id = db.collections.test.create({foo: 'bar'});
+      db.collections.test.update(id, {baz: 42});
+
+      return Promise.all([
+        new Promise((resolve, reject) => {
+          db.on('update', pending => {
+            try {
+              t.type(pending[0], 'string');
+              t.strictEqual(pending[0].length, 24);
+              t.match(pending[0], /^[0-9a-f]{24}$/);
+              t.strictEqual(pending[1], 'test');
+              t.strictEqual(pending[2], '=');
+              t.strictEqual(pending[3].toString(), id);
+              t.strictSame(pending[3], new Ident(id));
+              t.strictEqual(pending[4], '');
+              t.strictSame(pending[5], {foo: 'bar'});
+              t.strictEqual(pending[6], 'test');
+              t.strictEqual(pending[7], '=');
+              t.strictEqual(pending[8].toString(), id);
+              t.strictSame(pending[8], new Ident(id));
+              t.strictEqual(pending[9], 'baz');
+              t.strictSame(pending[10], 42);
+              resolve();
+            } catch(err) { reject(err) };
+          })
+        }),
+        new Promise((resolve, reject) => {
+          db.on('result', (item, pending, index) => {
+            if (index !== 1) return;
+            try {
+              t.type(item, Item);
+              t.strictEqual(item._id, id);
+              t.strictEqual(item, db.collections.test[id]);
+              t.strictEqual(item.foo, 'bar');
+              t.strictEqual(item.baz, undefined);
+              t.strictEqual(pending[index + 0], 'test');
+              t.strictEqual(pending[index + 1], '=');
+              t.strictSame(pending[index + 2], new Ident(id));
+              t.strictEqual(pending[index + 3], '');
+              t.strictSame(pending[index + 4], {foo: 'bar'});
+              resolve();
+            } catch(err) { reject(err) };
+          })
+        }),
+        new Promise((resolve, reject) => {
+          db.on('result', (item, pending, index) => {
+            if (index !== 6) return;
+            try {
+              t.type(item, Item);
+              t.strictEqual(item._id, id);
+              t.strictEqual(item, db.collections.test[id]);
+              t.strictEqual(item.foo, 'bar');
+              t.strictEqual(item.baz, 42);
+              t.strictEqual(pending[index + 0], 'test');
+              t.strictEqual(pending[index + 1], '=');
+              t.strictSame(pending[index + 2], new Ident(id));
+              t.strictEqual(pending[index + 3], 'baz');
+              t.strictSame(pending[index + 4], 42);
+              resolve();
+            } catch(err) { reject(err) };
+          })
+        })
+      ]);
+    }).catch(t.threw);
+  });
+
   suite.end();
 });
