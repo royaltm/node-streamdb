@@ -232,7 +232,7 @@ test("update errors", suite => {
     return db.writable.then(db => {
       var promise = Promise.all([
         new Promise((resolve, reject) => {
-          db.on('update', (pending) => {
+          db.on('update', pending => {
             try {
               t.type(pending, Array);
               t.strictEqual(pending.length, 1 + 3*5);
@@ -264,6 +264,78 @@ test("update errors", suite => {
       db.collections.things.create({unique: 2});
 
       return promise;
+    }).catch(t.threw);
+  });
+
+  suite.test('push error throw', t => {
+    t.plan(34);
+    var error, db = new DB();
+    db.stream.pipe(db.stream);
+    return db.writable.then(db => {
+      t.throws(() => db._push('test', ' '), new Error('DB._push: unknown reserved operator: " "'));
+      t.throws(() => db._push(undefined, 'xyz'), new Error('DB._push: all arguments must be defined'));
+      t.throws(() => db._push(null, 'xyz'), new Error('DB._push: all arguments must be defined'));
+      t.throws(() => db._push(null, 'xyz', null), new Error('DB._push: all arguments must be defined'));
+      t.throws(() => db._push(null, 'xyz', null, null), new Error('DB._push: all arguments must be defined'));
+      t.throws(() => db._push(null, '='), new Error('DB._push: invalid single operator arguments'));
+      t.throws(() => db._push(null, '=', null, null, null), new Error('DB._push: invalid single operator arguments'));
+      t.throws(() => db._push(null, 'U'), new Error('DB._push: invalid filter operator arguments'));
+      t.throws(() => db._push(null, 'U', null, null, null), new Error('DB._push: invalid filter operator arguments'));
+      t.throws(() => db._push(null, '!'), new Error('DB._push: invalid collection operator arguments'));
+      t.throws(() => db._push(null, '!', null, null, null), new Error('DB._push: invalid collection operator arguments'));
+      t.throws(() => db._push(null, '_'), new Error('DB._push: invalid internal operator arguments'));
+      t.throws(() => db._push(null, '_', null, null, null), new Error('DB._push: invalid internal operator arguments'));
+      t.throws(() => db._push(null, 'T'), new Error('DB._push: invalid error operator arguments'));
+      t.throws(() => db._push(null, 'T', null, null, null), new Error('DB._push: invalid error operator arguments'));
+
+      db.pushErrorThrow(error = new Error('foo'));
+      return db.save();
+    })
+    .catch(err => {
+      t.type(err, Error);
+      t.strictEqual(err, error);
+
+      db.pushErrorThrow('bar', 'collection', 'filter', {some: 1, properties: [1,2,3]});
+      return db.save();
+    })
+    .catch(err => {
+      t.type(err, Error);
+      t.notStrictEqual(err, error);
+      t.strictEqual(err.message, 'bar');
+      t.strictEqual(err.collection, 'collection');
+      t.strictEqual(err.filter, 'filter');
+      t.strictEqual(err.some, 1);
+      t.strictSame(err.properties, [1,2,3]);
+
+      db._push(null, 'custom', null, null, 'message');
+
+      return Promise.all([
+        new Promise((resolve, reject) => {
+          db.on('update', pending => {
+            try {
+              t.strictEqual(pending[2], 'custom');
+              t.strictEqual(pending[5], 'message');
+              pending[2] = 'T';
+              resolve();
+            } catch(err) { reject(err) };
+          })
+        }),
+        new Promise((resolve, reject) => {
+          db.on('updateRejection', (err, pending, index) => {
+            try {
+              t.type(err, Error);
+              t.notStrictEqual(err, error);
+              t.strictEqual(err.message, 'message');
+              t.strictEqual(err.collection, null);
+              t.strictEqual(err.filter, null);
+              t.strictEqual(index, 1);
+              t.strictEqual(pending[index + 1], 'T');
+              t.strictEqual(pending[index + 4], 'message');
+              resolve();
+            } catch(err) { reject(err) };
+          });
+        })
+      ]);
     }).catch(t.threw);
   });
 
