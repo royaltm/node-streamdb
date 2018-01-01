@@ -9,6 +9,7 @@ const {genIdent, Ident} = require('../lib/id');
 const errors = require('../lib/errors');
 const { VersionError } = errors;
 const itertools = require('../lib/iter');
+const schemaUtils = require('../lib/collection/schema/utils');
 
 test("DB", suite => {
 
@@ -21,6 +22,7 @@ test("DB", suite => {
     t.type(DB.Item.collection, 'symbol');
     t.type(DB.itertools, Object);
     t.strictEqual(DB.itertools, itertools);
+    t.strictEqual(DB.schemaUtils, schemaUtils);
     t.type(DB.VersionError, 'function')
     t.type(DB.VersionError.prototype, Error);
     t.strictEqual(DB.VersionError, errors.VersionError)

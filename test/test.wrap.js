@@ -3,11 +3,12 @@
 const test = require('tap').test;
 const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
+const { iterateReferences, getReferencedCollection } = require('../lib/collection/schema/utils');
 
 test("DB", suite => {
 
   suite.test('should export all collections', t => {
-    t.plan(94);
+    t.plan(98);
     var db = new DB({schema: {
       groups: {
         name: {type: String, unique: true, required: true}
@@ -44,55 +45,60 @@ test("DB", suite => {
     db.stream.pipe(db.stream);
 
     return db.writable.then(db => {
-      Item.unwrap(groups, {_id: badassesId, name: 'Badasses', roles: [
+      for(let [collection, value] of Item.unwrap(groups, {_id: badassesId, name: 'Badasses', roles: [
         {_id: badassOwnerId, role: 'owner', group: badassesId},
         {_id: badassAdminId, role: 'admin', group: badassesId},
         {_id: badassGuestId, role: 'guest', group: badassesId, users: [
           {_id: userids(3), login: "Badass MF", firstName: "Misha", lastName: "Zupenko", email: "zupenko@ru.net"},
           {_id: userids(7), login: "The Guest", firstName: "Clint", lastName: "Eastwood", email: "goahead@makemy.day"}
         ]}
-      ]})
-      .forEach(([collection, value]) => collection.create(value));
+      ]})) {
+        if ('string' !== typeof value) collection.create(value);
+      }
 
-      Item.unwrap(users, {_id: userids(0), login: "Badass Numer Uno", roles: [
+      for(let [collection, value] of Item.unwrap(users, {_id: userids(0), login: "Badass Numer Uno", roles: [
           {_id: wimpOwnerId, role: 'owner', group: {_id: wimpsId, name: 'Wimps'}},
           badassOwnerId,
           badassAdminId
         ], firstName: "Dżon", lastName: "Kowalski", email: "dzon@badasses.me"
-      })
-      .forEach(([collection, value]) => collection.create(value));
+      })) {
+        if ('string' !== typeof value) collection.create(value);
+      }
 
-      Item.unwrap(roles, {_id: wimpAdminId, role: 'admin', group: wimpsId, users: [
+      for(let [collection, value] of Item.unwrap(roles, {_id: wimpAdminId, role: 'admin', group: wimpsId, users: [
           {_id: userids(4), login: "Whiny admin", lastName: "Kowalski"}
         ]
-      })
-      .forEach(([collection, value]) => collection.create(value));
+      })) {
+        if ('string' !== typeof value) collection.create(value);
+      }
 
-      Item.unwrap(roles, {_id: wimpGuestId, role: 'guest', group: wimpsId, users: [
+      for(let [collection, value] of Item.unwrap(roles, {_id: wimpGuestId, role: 'guest', group: wimpsId, users: [
           {_id: userids(5), login: "Wimpy 1", firstName: "Foo", lastName: "Bar"},
           {_id: userids(6), login: "Whiny guest", firstName: "Foo", lastName: "Bar"},
           userids(7)
         ]
-      })
-      .forEach(([collection, value]) => collection.create(value));
+      })) {
+        if ('string' !== typeof value) collection.create(value);
+      }
 
-      Item.unwrap(users, {_id: userids(1), login: "BOFH", roles: [
+      for(let [collection, value] of Item.unwrap(users, {_id: userids(1), login: "BOFH", roles: [
           badassAdminId
         ],firstName: "Suzuki", lastName: "Kowalski", email: "suzu@badasses.me"
-      })
-      .forEach(([collection, value]) => collection.create(value));
+      })) {
+        if ('string' !== typeof value) collection.create(value);
+      }
 
-
-      Item.unwrap(users, {_id: userids(2), login: "LART user", roles: [
+      for(let [collection, value] of Item.unwrap(users, {_id: userids(2), login: "LART user", roles: [
           badassAdminId
         ], firstName: "Suzuki", lastName: "Kowalski"
-      })
-      .forEach(([collection, value]) => collection.create(value));
+      })) {
+        if ('string' !== typeof value) collection.create(value);
+      }
 
-      var unwrapped = Item.unwrap(users, {login: 'xxx', firstName: 'A', lastName: 'Z', roles: [
+      var unwrapped = Array.from(Item.unwrap(users, {login: 'xxx', firstName: 'A', lastName: 'Z', roles: [
         {role: 'guest', group: {name: 'G1'}},
         {role: 'admin', group: {name: 'G2'}},
-      ]});
+      ]}));
 
       t.strictEquals(unwrapped.length, 5);
       t.strictEquals(unwrapped[0].length, 2);
@@ -127,6 +133,15 @@ test("DB", suite => {
       t.deepEquals(unwrapped[3][1], {_id: radminid, role: 'admin', group: g2id});
       t.deepEquals(unwrapped[4][1], {_id: xxxid, login: 'xxx', firstName: 'A', lastName: 'Z',
                                         roles: [rguestid, radminid]});
+
+      t.strictSame(Array.from(iterateReferences(roles, {users: [userids(0), userids(1)], group: badassesId})),
+        [[groups, badassesId],
+         [users, userids(0)],
+         [users, userids(1)]]);
+
+      t.strictEquals(getReferencedCollection(roles, 'foo'), undefined);
+      t.strictEquals(getReferencedCollection(roles, 'users'), users);
+      t.strictEquals(getReferencedCollection(roles, 'group'), groups);
 
       return db.save().then(() => db);
     })
