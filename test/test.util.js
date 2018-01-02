@@ -494,3 +494,22 @@ test("isUndefined", function(t) {
   t.strictEqual(util.isUndefined(Symbol("foo")),                   false);
   t.end();
 });
+
+test("getNth", function(t) {
+  t.strictEqual(util.getNth([].entries(), 0), undefined);
+  t.strictSame(util.getNth(['foo'].entries(), 0), [0, 'foo']);
+  t.strictEqual(util.getNth(['foo'].entries(), 1), undefined);
+  t.strictEqual(util.getNth(['foo'].entries(), -1), undefined);
+
+  function *genek() {
+    yield 42;
+    yield null;
+    yield 'rabarbar';
+  }
+
+  t.strictEqual(util.getNth(genek(), '-1'), undefined);
+  t.strictEqual(util.getNth(genek(), '0'), 42);
+  t.strictEqual(util.getNth(genek(), '1'), null);
+  t.strictEqual(util.getNth(genek(), '2'), 'rabarbar');
+  t.end();
+});
