@@ -9,7 +9,7 @@ const Ident = require('../lib/id').Ident;
 test("DB", suite => {
 
   suite.test('should have collections from schema', t => {
-    t.plan(123);
+    t.plan(173);
     var alrami_id;
     var db = new DB({schema: {
       _version: '1.2.3',
@@ -108,7 +108,7 @@ test("DB", suite => {
       t.strictEqual(star.name, "Foo");
       t.strictEqual(star.bayer, undefined);
       t.strictEqual(star.constellation, undefined);
-      t.deepEqual(star.toJSON(), {_id: star._id, name: "Foo"});
+      t.strictSame(star.toJSON(), {_id: star._id, name: "Foo"});
       t.strictEqual(db.collections.stars[0], star);
       t.strictEqual(db.collections.stars[alrami_id], star);
       t.strictEqual(db.collections.stars.get(alrami_id), star);
@@ -141,7 +141,7 @@ test("DB", suite => {
       t.type(constellation, db.collections.constellations.model);
       t.strictEqual(constellation.stars.size, 1);
       t.strictEqual(constellation.stars[0], star);
-      t.deepEqual(star.toJSON(), {_id: star._id, name: "Albaldah", bayer: "π Sagittarii", constellation: constellation._id});
+      t.strictSame(star.toJSON(), {_id: star._id, name: "Albaldah", bayer: "π Sagittarii", constellation: constellation._id});
       t.strictEqual(constellation.stars[0], star);
       t.strictEqual(constellation.stars.has(star), true);
       t.strictEqual(db.collections.stars[0], star);
@@ -155,6 +155,79 @@ test("DB", suite => {
       t.strictEqual(db.collections.stars.by.name.has('Foo'), false);
       t.strictEqual(db.collections.stars.by.name.get('Albaldah'), star);
       t.strictEqual(db.collections.stars.by.name.has('Albaldah'), true);
+
+      t.strictSame(constellation.location, {ra: 19, dec: -25});
+      t.strictEqual(constellation.location.dec, -25);
+      t.strictEqual(constellation.location.ra, 19);
+
+      db.collections.constellations.delete(constellation, 'location.ra');
+      return db.collections.constellations.save();
+    })
+    .then(constellation => {
+      t.type(constellation, Item);
+      var star = db.collections.stars.get(alrami_id);
+      t.type(star, Item);
+      t.strictSame(constellation.location, {dec: -25});
+      t.strictEqual(constellation.location.dec, -25);
+      t.strictEqual(constellation.location.ra, undefined);
+      t.strictSame(constellation.toJSON(), {_id: constellation._id, name: "Sagittarius",
+      createdAt: new Date("1970-01-01T00:00:00.000Z"),
+      zodiac: "♐",
+      location: {dec: -25},
+      area: "867 sq. deg.",
+      stars: [star._id]});
+      t.strictSame(constellation.stars.slice(), db.collections.stars.all());
+
+      t.throws(() => db.collections.stars.delete(alrami_id, ''), new TypeError("delete: property name must not be empty"));
+
+      return db.collections.stars.deleteAndSave(alrami_id, 'bayer');
+    })
+    .then(star => {
+      t.type(star, Item);
+      t.type(star, db.collections.stars.model);
+      t.strictEqual(star._id, alrami_id);
+      t.strictEqual(star.name, "Albaldah");
+      t.strictEqual(star.bayer, undefined);
+      var constellation = db.collections.constellations[0];
+      t.type(constellation, Item);
+      t.type(constellation, db.collections.constellations.model);
+      t.strictSame(star.toJSON(), {_id: star._id, name: "Albaldah", constellation: constellation._id});
+      t.strictEqual(constellation.stars[0], star);
+      t.strictEqual(constellation.stars.has(star), true);
+      t.strictEqual(db.collections.stars[0], star);
+      t.strictEqual(db.collections.stars[alrami_id], star);
+      t.strictEqual(db.collections.stars.get(alrami_id), star);
+      t.strictEqual(db.collections.stars.has(alrami_id), true);
+      t.strictEqual(db.collections.stars.by.name.size, 1);
+      t.strictEqual(db.collections.stars.by.name.get('Alrami'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Alrami'), false);
+      t.strictEqual(db.collections.stars.by.name.get('Foo'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Foo'), false);
+      t.strictEqual(db.collections.stars.by.name.get('Albaldah'), star);
+      t.strictEqual(db.collections.stars.by.name.has('Albaldah'), true);
+
+      return db.collections.stars.deleteAndSave(alrami_id);
+    })
+    .then(result => {
+      t.strictEqual(result, true);
+      var constellation = db.collections.constellations[0];
+      t.strictEqual(db.collections.constellations.get(constellation._id), constellation);
+      t.type(constellation, Item);
+      t.type(constellation, db.collections.constellations.model);
+      t.strictEqual(constellation.stars.size, 0);
+      t.strictSame(constellation.stars.ary, []);
+      t.strictEqual(db.collections.stars.size, 0);
+      t.strictEqual(db.collections.stars[0], undefined);
+      t.strictEqual(db.collections.stars[alrami_id], undefined);
+      t.strictEqual(db.collections.stars.get(alrami_id), undefined);
+      t.strictEqual(db.collections.stars.has(alrami_id), false);
+      t.strictEqual(db.collections.stars.by.name.size, 0);
+      t.strictEqual(db.collections.stars.by.name.get('Alrami'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Alrami'), false);
+      t.strictEqual(db.collections.stars.by.name.get('Foo'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Foo'), false);
+      t.strictEqual(db.collections.stars.by.name.get('Albaldah'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Albaldah'), false);
 
       db.pushVersionMark();
 
