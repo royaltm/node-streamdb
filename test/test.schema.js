@@ -16,7 +16,7 @@ const Blob = require('../lib/collection/schema/types').blob;
 test("DB", suite => {
 
   suite.test("should create database with type constraint schema", t => {
-    t.plan(26+115+2);
+    t.plan(26+123+2);
     var db = new DB({schema: {
       test: {
         name: String,
@@ -127,6 +127,13 @@ test("DB", suite => {
         t.throws(() => { item.__bar = null; }, new TypeError('test: property name must not start with a "__": __bar'));
         t.throws(() => { item.hasOwnProperty = null; }, new TypeError("test: reserved property name: hasOwnProperty"));
         t.throws(() => { item.constructor = null; }, new TypeError("test: reserved property name: constructor"));
+        t.throws(() => db.collections.test.delete(item, '_id'), new TypeError("test: reserved property name: _id"));
+        t.throws(() => db.collections.test.delete(item, 'toJSON'), new TypeError("test: reserved property name: toJSON"));
+        t.throws(() => db.collections.test.delete(item, 'toString'), new TypeError("test: reserved property name: toString"));
+        t.throws(() => db.collections.test.delete(item, '__'), new TypeError('test: property name must not start with a "__": __'));
+        t.throws(() => db.collections.test.delete(item, '__bar'), new TypeError('test: property name must not start with a "__": __bar'));
+        t.throws(() => db.collections.test.delete(item, 'hasOwnProperty'), new TypeError("test: reserved property name: hasOwnProperty"));
+        t.throws(() => db.collections.test.delete(item, 'constructor'), new TypeError("test: reserved property name: constructor"));
         t.throws(() => db.collections.test.update(item, {_id: null}), new TypeError("test: reserved property name: _id"));
         t.throws(() => db.collections.test.update(item, {toJSON: null}), new TypeError("test: reserved property name: toJSON"));
         t.throws(() => db.collections.test.update(item, {toString: null}), new TypeError("test: reserved property name: toString"));
@@ -235,6 +242,8 @@ test("DB", suite => {
         t.throws(() => db.collections.test.replace(item, {other:{}}), new TypeError("test[].other.nested.flag: property is required"));
         t.throws(() => db.collections.test.replace(item, {other:{nested:{}}}), new TypeError("test[].other.nested.flag: property is required"));
         t.throws(() => db.collections.test.replace(item, {other:{nested:{flag: undefined}}}), new TypeError("test[].other.nested.flag: property is required"));
+        t.throws(() => db.collections.test.replace(item, {'': true, other:{nested:{flag: false}}}), new TypeError("test: property name must not be empty"));
+
         db.collections.test.update(item, {}); /* no op */
         t.throws(() => db.collections.test.update(item, {other:{}}), new TypeError("test[].other.nested.flag: property is required"));
         t.throws(() => db.collections.test.update(item, {other:{nested:{}}}), new TypeError("test[].other.nested.flag: property is required"));
@@ -250,7 +259,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(107);
+    t.plan(108);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
@@ -465,6 +474,8 @@ test("DB", suite => {
         t.type(item, Item);
         t.deepEqual(item.toJSON(), {_id: item._id, name: 'foo', enum: 'foo', blob: 'deadbaca', scal: "xxx", time: new Date(2016,6,12,20,42), other: {nested: {count: 42, flag: true}}, unschemed: "rarara"});
 
+        t.throws(() => db.collections.test.delete(item, ''), new TypeError("test: property name must not be empty"));
+
         t.throws(() => { item.enum = "baz"; }, new TypeError('enum: property needs to be one of: foo|bar'));
         t.throws(() => db.collections.test.update(item, {enum: "baz"}), new TypeError('test[].enum: property needs to be one of: foo|bar'));
         t.throws(() => { item.name = null; }, new TypeError('test[].name: property needs to be a string'));
@@ -472,7 +483,7 @@ test("DB", suite => {
         t.throws(() => { delete item.scal; }, new TypeError('test[].scal: property is required'));
         t.throws(() => db.collections.test.update(item, {scal: undefined}), new TypeError('test[].scal: property is required'));
 
-        t.throws(() => db.collections.test.update(item, {'': null}), new TypeError("update: property name must not be empty"));
+        t.throws(() => db.collections.test.update(item, {'': null}), new TypeError("test: property name must not be empty"));
         t.throws(() => db.collections.test.update(item), new TypeError("update: value must be a plain object"));
         t.throws(() => db.collections.test.update(item, []), new TypeError("update: value must be a plain object"));
         t.throws(() => db.collections.test.update(item, /asd/), new TypeError("update: value must be a plain object"));

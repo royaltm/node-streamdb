@@ -9,7 +9,7 @@ const Ident = require('../lib/id').Ident;
 test("DB", suite => {
 
   suite.test('should have collections from schema', t => {
-    t.plan(173);
+    t.plan(172);
     var alrami_id;
     var db = new DB({schema: {
       _version: '1.2.3',
@@ -177,8 +177,6 @@ test("DB", suite => {
       area: "867 sq. deg.",
       stars: [star._id]});
       t.strictSame(constellation.stars.slice(), db.collections.stars.all());
-
-      t.throws(() => db.collections.stars.delete(alrami_id, ''), new TypeError("delete: property name must not be empty"));
 
       return db.collections.stars.deleteAndSave(alrami_id, 'bayer');
     })
