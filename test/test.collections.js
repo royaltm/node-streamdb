@@ -9,8 +9,8 @@ const Ident = require('../lib/id').Ident;
 test("DB", suite => {
 
   suite.test('should have collections from schema', t => {
-    t.plan(72);
-
+    t.plan(123);
+    var alrami_id;
     var db = new DB({schema: {
       _version: '1.2.3',
       constellations: {
@@ -58,7 +58,7 @@ test("DB", suite => {
 
     db.stream.pipe(db.stream);
     return db.writable.then(db => {
-      var alrami_id = db.collections.stars.create({name: "Alrami", bayer: "α Sagittarii"});
+      alrami_id = db.collections.stars.create({name: "Alrami", bayer: "α Sagittarii"});
       return db.collections.constellations.createAndSave({
         name: "Sagittarius",
         createdAt: new Date(0),
@@ -86,12 +86,75 @@ test("DB", suite => {
                   constellation: constellation._id});
       t.strictEqual(star.constellation, constellation);
       t.strictEqual(constellation.stars[0], star);
+      t.strictEqual(constellation.stars.has(star), true);
+      t.strictEqual(db.collections.stars[0], star);
+      t.strictEqual(db.collections.stars[alrami_id], star);
+      t.strictEqual(db.collections.stars.get(alrami_id), star);
+      t.strictEqual(db.collections.stars.has(alrami_id), true);
       t.strictEqual(db.collections.stars.by.name.get('Alrami'), star);
       t.strictEqual(db.collections.stars.by.name.size, 1);
       t.strictEqual(db.collections.stars.by.name.has('Alrami'), true);
       t.strictEqual(db.collections.constellations.by.name.get('Sagittarius'), constellation);
       t.strictEqual(db.collections.constellations.by.name.size, 1);
       t.strictEqual(db.collections.constellations.by.name.has('Sagittarius'), true);
+
+      db.collections.stars[alrami_id] = {name: "Foo"};
+      return db.save();
+    })
+    .then(star => {
+      t.type(star, Item);
+      t.type(star, db.collections.stars.model);
+      t.strictEqual(star._id, alrami_id);
+      t.strictEqual(star.name, "Foo");
+      t.strictEqual(star.bayer, undefined);
+      t.strictEqual(star.constellation, undefined);
+      t.deepEqual(star.toJSON(), {_id: star._id, name: "Foo"});
+      t.strictEqual(db.collections.stars[0], star);
+      t.strictEqual(db.collections.stars[alrami_id], star);
+      t.strictEqual(db.collections.stars.get(alrami_id), star);
+      t.strictEqual(db.collections.stars.has(alrami_id), true);
+      t.strictEqual(db.collections.stars.by.name.size, 1);
+      t.strictEqual(db.collections.stars.by.name.get('Alrami'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Alrami'), false);
+      t.strictEqual(db.collections.stars.by.name.get('Foo'), star);
+      t.strictEqual(db.collections.stars.by.name.has('Foo'), true);
+      var constellation = db.collections.constellations[0];
+      t.type(constellation, Item);
+      t.type(constellation, db.collections.constellations.model);
+      t.strictEqual(constellation.stars.size, 0);
+      t.strictEqual(constellation.stars[0], undefined);
+      t.strictEqual(constellation.stars.has(star), false);
+
+      db.collections.stars.set(alrami_id, {name: "Albaldah", bayer: "π Sagittarii", constellation: constellation});
+      return db.save();
+    })
+    .then(star => {
+      t.type(star, Item);
+      t.type(star, db.collections.stars.model);
+      t.strictEqual(star._id, alrami_id);
+      t.strictEqual(star.name, "Albaldah");
+      t.strictEqual(star.bayer, "π Sagittarii");
+      var constellation = db.collections.constellations[0];
+      t.strictEqual(star.constellation, constellation);
+      t.strictEqual(db.collections.constellations.get(constellation._id), constellation);
+      t.type(constellation, Item);
+      t.type(constellation, db.collections.constellations.model);
+      t.strictEqual(constellation.stars.size, 1);
+      t.strictEqual(constellation.stars[0], star);
+      t.deepEqual(star.toJSON(), {_id: star._id, name: "Albaldah", bayer: "π Sagittarii", constellation: constellation._id});
+      t.strictEqual(constellation.stars[0], star);
+      t.strictEqual(constellation.stars.has(star), true);
+      t.strictEqual(db.collections.stars[0], star);
+      t.strictEqual(db.collections.stars[alrami_id], star);
+      t.strictEqual(db.collections.stars.get(alrami_id), star);
+      t.strictEqual(db.collections.stars.has(alrami_id), true);
+      t.strictEqual(db.collections.stars.by.name.size, 1);
+      t.strictEqual(db.collections.stars.by.name.get('Alrami'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Alrami'), false);
+      t.strictEqual(db.collections.stars.by.name.get('Foo'), undefined);
+      t.strictEqual(db.collections.stars.by.name.has('Foo'), false);
+      t.strictEqual(db.collections.stars.by.name.get('Albaldah'), star);
+      t.strictEqual(db.collections.stars.by.name.has('Albaldah'), true);
 
       db.pushVersionMark();
 
