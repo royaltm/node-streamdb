@@ -9,13 +9,13 @@ const { thisSym: this$ } = require('../lib/collection/symbols');
 
 const itemKlass$ = Symbol.for("itemKlass");
 
-const ManyToOneSet = require('../lib/collection/schema/many_to_one');
+const ManyToOneSet = require('../lib/collection/schema/refsets/many_to_one');
 const Primitive = require('../lib/collection/schema/types').primitive;
 
 test("DB", suite => {
 
   suite.test("should create database with one to many relations", t => {
-    t.plan(123);
+    t.plan(129);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -117,6 +117,12 @@ test("DB", suite => {
         t.type(bar.foos[1], Item);
         t.strictEqual(bar.foos[0], db.collections.foos[0])
         t.strictEqual(bar.foos[1], db.collections.foos[1])
+        t.strictSame(bar.foos.slice(), db.collections.foos.all());
+        t.strictSame(bar.foos.slice(1), db.collections.foos.all().slice(1));
+        t.strictSame(bar.foos.slice(0, 1), db.collections.foos.all().slice(0, 1));
+        t.strictSame(bar.foos.slice(1, 2), db.collections.foos.all().slice(1, 2));
+        t.strictSame(bar.foos.slice(-1), db.collections.foos.all().slice(-1));
+        t.strictSame(bar.foos.slice(2), db.collections.foos.all().slice(2));
         t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 0, foos: Array.from(db.collections.foos.keys())});
         t.strictEqual(db.collections.foos.size, 2);
         delete item.bar;
