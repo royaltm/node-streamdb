@@ -22,11 +22,11 @@ test("DB", suite => {
     t.plan(5+52);
     var db = new DB({schema: {
       users: {
-        login: {type: String, required: true, unique: true},
+        login: {type: 'String', required: true, unique: true},
         name: String
       },
       groups: {
-        name: {type: String, required: true, unique: true},
+        name: {type: 'String', required: true, unique: true},
         description: String
       },
       roles: {
@@ -40,12 +40,12 @@ test("DB", suite => {
     t.type(db, DB);
     t.deepEqual(db.schema, {
       users: {
-        login: {type: String, required: true, unique: true},
-        name: {type: String}
+        login: {type: 'String', required: true, unique: true},
+        name: {type: 'String'}
       },
       groups: {
-        name: {type: String, required: true, unique: true},
-        description: {type: String}
+        name: {type: 'String', required: true, unique: true},
+        description: {type: 'String'}
       },
       roles: {
         role: {type: 'enum', required: true, default: "guest", enum: ["admin", "guest"]},

@@ -29,10 +29,10 @@ test("DB", suite => {
     t.type(db, DB);
     t.deepEqual(db.schema, {
       test: {
-        name: {type: String},
-        time: {type: Date},
-        'other.nested.count': {type: Number},
-        'other.nested.flag': {type: Boolean, required: true}
+        name: {type: 'String'},
+        time: {type: 'Date'},
+        'other.nested.count': {type: 'Number'},
+        'other.nested.flag': {type: 'Boolean', required: true}
       }
     });
 

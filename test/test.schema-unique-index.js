@@ -32,11 +32,11 @@ test("DB", suite => {
     t.type(db, DB);
     t.deepEqual(db.schema, {
       test: {
-        bool: {type: Boolean, unique: true},
+        bool: {type: 'Boolean', unique: true},
         value: {unique: true},
-        serial: {type: Number, unique: true},
-        name: {type: String, unique: true, index: true},
-        time: {type: Date, unique: true},
+        serial: {type: 'Number', unique: true},
+        name: {type: 'String', unique: true, index: true},
+        time: {type: 'Date', unique: true},
       }
     });
 

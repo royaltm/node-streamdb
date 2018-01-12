@@ -31,10 +31,10 @@ test("DB", suite => {
     t.type(db, DB);
     t.deepEqual(db.schema, {
       test: {
-        bool: {type: Boolean, unique: true},
-        serial: {type: Number},
-        name: {type: String, index: true, unique: false},
-        time: {type: Date},
+        bool: {type: 'Boolean', unique: true},
+        serial: {type: 'Number'},
+        name: {type: 'String', index: true, unique: false},
+        time: {type: 'Date'},
         multi: {unique: false, components: ["serial", "multi", "time"]},
         duo: {unique: false, components: ["multi", "name"]},
       }
@@ -424,7 +424,7 @@ test("DB", suite => {
         bargrip: {unique: false, components: ["bar", "barsome"]},
       },
       bars: {
-        value: {type: Number, unique: true, required: true}
+        value: {type: 'Number', unique: true, required: true}
       }
     });
 
