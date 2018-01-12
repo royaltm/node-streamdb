@@ -58,13 +58,22 @@ test("DB", suite => {
   });
 
   suite.test('should emit error on uncompatible version from stream', t => {
-    t.plan(33);
+    t.plan(41);
     var syncStream = new PassThrough({objectMode: true});
 
     var db = new DB({schema: {_version: '2.1.5'}});
     t.strictEqual(db.schemaVersion.version, '2.1.5');
     t.strictSame(db.schemaVersion, {major: 2, minor: 1, patch: 5, version: '2.1.5'});
     t.strictEqual(db.readonly, false);
+
+    t.throws(() => db.verifyDataVersion('1.0'), new VersionError('Could not parse version read from stream: "1.0"'));
+    t.throws(() => db.verifyDataVersion('1.0.0'), new VersionError('Version read from stream has different major: 1.0.0 !^ 2.1.5'));
+    t.throws(() => db.verifyDataVersion('2.2.0'), new VersionError('Version read from stream has greater minor: 2.2.0 > 2.1.5'));
+    t.throws(() => db.pushVersionMark('1.0'), new VersionError('Could not parse version read from stream: "1.0"'));
+    t.throws(() => db.pushVersionMark('1.0.0'), new VersionError('Version read from stream has different major: 1.0.0 !^ 2.1.5'));
+    t.throws(() => db.pushVersionMark('2.2.0'), new VersionError('Version read from stream has greater minor: 2.2.0 > 2.1.5'));
+    t.strictSame(db.verifyDataVersion('2.0.0'), {major: 2, minor: 0, patch: 0, version: '2.0.0'});
+    t.strictSame(db.verifyDataVersion('2.1.99'), {major: 2, minor: 1, patch: 99, version: '2.1.99'});
 
     syncStream.pipe(db.stream);
 
