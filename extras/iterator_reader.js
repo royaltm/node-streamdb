@@ -20,6 +20,10 @@ class IteratorReader extends Readable {
   constructor(iterator, options) {
     options = Object.assign({objectMode: true}, options);
 
+    if ('function' !== typeof iterator.next) {
+      iterator = iterator[Symbol.iterator]();
+    }
+
     super(options);
 
     this.iterator = iterator;
