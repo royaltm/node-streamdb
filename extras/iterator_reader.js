@@ -18,7 +18,7 @@ const { Readable } = require('stream');
 
 class IteratorReader extends Readable {
   constructor(iterator, options) {
-    options = Object.assign({}, options, {objectMode: true});
+    options = Object.assign({objectMode: true}, options);
 
     super(options);
 
