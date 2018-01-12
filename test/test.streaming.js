@@ -5,7 +5,7 @@ const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 const Ident = require('../lib/id').Ident;
 
-const { Duplex, PassThrough } = require('stream');
+const { Writable, Duplex, PassThrough } = require('stream');
 
 test("DB", suite => {
 
@@ -285,6 +285,42 @@ test("DB", suite => {
       t.strictEqual(item.foo, 'bar');
       t.strictEqual(item.baz, undefined);
     }).catch(t.threw);
+  });
+
+  suite.test("producing backpressure", t => {
+    t.plan(4 + 3);
+    var id;
+    var db = new DB({autosave: false, stream: {highWaterMark: 1}});
+    var valve = new Writable({
+      highWaterMark: 1,
+      objectMode: true,
+      write(data, enc, callback) {
+        try {
+          t.strictSame(data, [db._lastIdent, 'test', '=', new Ident(id), '', {foo: 'bar'}]);
+        } catch(e) { return callback(e) };
+        callback();
+      }
+    });
+    db.stream.pipe(valve);
+    return db.writable
+    .then(db => new Promise((resolve, reject) => {
+      valve.on('error', reject);
+      t.strictEquals(db._flush(), undefined);
+      id = db.collections.test.create({foo: 'bar'});
+      t.strictEquals(db._flush(), true);
+      id = db.collections.test.create({foo: 'bar'});
+      t.strictEquals(db._flush(), false);
+      db.once('writable', () => {
+        setImmediate(() => {
+          try {
+            id = db.collections.test.create({foo: 'bar'});
+            t.strictEquals(db._flush(), true);
+          } catch(e) { return reject(e) };
+        });
+      });
+      setTimeout(resolve, 100);
+    }))
+    .catch(t.threw);
   });
 
   suite.end();
