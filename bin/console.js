@@ -1,11 +1,6 @@
 #!/usr/bin/env node
 "use strict";
 
-const assert = require('assert');
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
-
 const colors = require('colors/safe');
 
 const { createRepl, databaseRepl, showPending, prompt } = require('../lib/repl');
