@@ -12,9 +12,9 @@ const anonymousId = Symbol('anonymous');
 
   example:
 
-    const codec = require("./msgpack_lite_codec");
+    const { asymmetricCodec } = require("./msgpack_lite_codec");
     fs.createReadStream("dump.db")
-    .pipe(msgpack.createDecodeStream({codec: codec}))
+    .pipe(msgpack.createDecodeStream({codec: asymmetricCodec}))
     .pipe(new ImportTransform())
     .pipe(db.stream, {end: false});
 */

@@ -8,10 +8,10 @@ const { Readable } = require('stream');
 
   example:
 
-    const codec = require("./msgpack_lite_codec");
+    const { asymmetricCodec } = require('./msgpack_lite_codec');
     const exportIterator = db.createDataExporter();
     new IteratorReader(exportIterator)
-    .pipe(msgpack.createEncodeStream({codec: codec}))
+    .pipe(msgpack.createEncodeStream({codec: asymmetricCodec}))
     .pipe(fs.createWriteStream("dump.db"));
 
 */
