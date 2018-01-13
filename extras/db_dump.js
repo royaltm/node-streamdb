@@ -100,17 +100,19 @@ function createDumpReadStream(db, compressionLevel) {
  * so the data after import will be only available in a local database instance.
  *
  * @param {DB} db
- * @param {string} filePath
+ * @param {string|number|Reader} file - file path or fd or a reader
  * @param {bool} [nounzip] - no zip inflation
  * @return {Promise}
  **/
-function restoreLocalDatabase(db, filePath, nounzip) {
+function restoreLocalDatabase(db, file, nounzip) {
   return new Promise((resolve, reject) => {
-    const {writer, reader} = createRestoreStreamPair(nounzip, asymmetricCodec, {chunkSize: DEFAULT_CHUNK_SIZE});
-    const fileReader = createReadStream(filePath, {highWaterMark: DEFAULT_CHUNK_SIZE});
-    const error = err => {
+    const {writer, reader} = createRestoreStreamPair(nounzip, asymmetricCodec);
+    const fileReader = fileReaderFrom(file, {highWaterMark: DEFAULT_CHUNK_SIZE});
+    const transform = new ImportTransform();
+    const error = (err) => {
+      transform.unpipe(db.stream);
       db.stream.removeListener('error', error);
-      fileReader.close();
+      if (fileReader !== file) fileReader.close();
       reject(err);
     };
     fileReader
@@ -118,7 +120,7 @@ function restoreLocalDatabase(db, filePath, nounzip) {
     .pipe(writer);
     reader
     .on('error', error)
-    .pipe(new ImportTransform())
+    .pipe(transform)
     .on('error', error)
     .on('end', () => {
       db.stream.removeListener('error', error);
@@ -139,12 +141,12 @@ function restoreLocalDatabase(db, filePath, nounzip) {
  * This operation is not atomic and updated data can be divided into many log entry updates.
  *
  * @param {DB} db
- * @param {string} filePath
+ * @param {string|number|Reader} file - file path or fd or a reader
  * @param {bool} [nounzip] - no zip inflation
  * @param {number} [updateChunkSize] - a rough estimation of the expected single log entry size
  * @return {Promise}
  **/
-function restoreDatabase(db, filePath, nounzip, updateChunkSize) {
+function restoreDatabase(db, file, nounzip, updateChunkSize) {
   if ('number' === typeof nounzip) {
     updateChunkSize = nounzip, nounzip = false;
   }
@@ -152,9 +154,9 @@ function restoreDatabase(db, filePath, nounzip, updateChunkSize) {
 
   return new Promise((resolve, reject) => {
     const {writer, reader} = createRestoreStreamPair(nounzip, codec, {chunkSize: updateChunkSize});
-    const fileReader = createReadStream(filePath, {highWaterMark: updateChunkSize});
+    const fileReader = fileReaderFrom(file, {highWaterMark: updateChunkSize});
     const error = err => {
-      fileReader.close();
+      if (fileReader !== file) fileReader.close();
       reject(err);
     };
     fileReader
@@ -184,4 +186,20 @@ function createRestoreStreamPair(nounzip, mpcodec, unzipOptions) {
   }
 
   return {writer, reader};
+}
+
+function fileReaderFrom(file, readerOptions) {
+  if ('number' === typeof file) {
+    readerOptions.fd = file;
+    return createReadStream(null, readerOptions);
+  }
+  else if ('string' === typeof file) {
+    return createReadStream(file, readerOptions);
+  }
+  else if ('object' === typeof file && file !== null && 'function' === typeof file.pipe) {
+    return file;
+  }
+  else {
+    throw new TypeError("file must be a path an open fd or a stream reader");
+  }
 }
