@@ -3,7 +3,7 @@
 
 const colors = require('colors/safe');
 
-const { createRepl, databaseRepl, showPending, prompt } = require('../lib/repl');
+const { createRepl, databaseRepl, getDbReplDefaultOptions, showPending, prompt } = require('../lib/repl');
 
 const msgpack = require('msgpack-lite');
 
@@ -61,6 +61,7 @@ createRepl().then(repl => {
     Object.assign(context, {
       colors
     , ri: repl
+    , opt: getDbReplDefaultOptions()
     , msgpack
     , ben
     , DB
