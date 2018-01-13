@@ -46,7 +46,10 @@ exports.verifyMetaVersion = verifyMetaVersion;
 exports.createYamlToObjTransform = createYamlToObjTransform;
 
 
-function exportDbToYamls(db, dataPath, reporter) {
+function exportDbToYamls(db, dataPath, reporter, yamlOptions) {
+  if ('object' === typeof reporter && reporter !== null) {
+    yamlOptions = reporter, reporter = undefined;
+  }
   /* prevent db updates during exporting */
   db.stream.cork();
   /* ensure db updates will be possible */
@@ -58,10 +61,10 @@ function exportDbToYamls(db, dataPath, reporter) {
       if (err) reject(err); else resolve();
     });
   })
-  .then(() => exportMetaToYaml(db, dataPath))
+  .then(() => exportMetaToYaml(db, dataPath, yamlOptions))
   .then(() => Promise.all(
       Object.keys(db.collections)
-            .map(name => exportCollectionToYaml(db.collection(name), dataPath)
+            .map(name => exportCollectionToYaml(db.collection(name), dataPath, yamlOptions)
               .then(() => reporter && reporter("exported collection: %j", name))
             )
       )
@@ -72,8 +75,8 @@ function exportDbToYamls(db, dataPath, reporter) {
   });
 }
 
-function exportMetaToYaml(db, dataPath) {
-  var metaPath = makeMetaPath(dataPath);
+function exportMetaToYaml(db, dataPath, yamlOptions) {
+  yamlOptions = Object.assign({}, yamlOptions);
 
   return new Promise((resolve, reject) => {
     var metastr = yaml.dump({
@@ -83,7 +86,8 @@ function exportMetaToYaml(db, dataPath) {
       host: os.hostname(),
       user: os.userInfo(),
       schema: db.schema
-    });
+    }, yamlOptions);
+    const metaPath = makeMetaPath(dataPath);
     const writer = createWriteStream(metaPath, {flags: 'wx'});
     writer
     .on('error', err => {
@@ -95,7 +99,7 @@ function exportMetaToYaml(db, dataPath) {
   });
 }
 
-function exportCollectionToYaml(collection, dataPath) {
+function exportCollectionToYaml(collection, dataPath, yamlOptions) {
   const name = collection.name
       , collPath = makeCollPath(dataPath, name);
 
@@ -105,7 +109,7 @@ function exportCollectionToYaml(collection, dataPath) {
       writer.close();
       reject(err);
     };
-    collectionToYamlExportStream(collection)
+    collectionToYamlExportStream(collection, yamlOptions)
     .on('error', error)
     .pipe(writer)
     .on('error', error)
@@ -113,11 +117,12 @@ function exportCollectionToYaml(collection, dataPath) {
   });
 }
 
-function collectionToYamlExportStream(collection) {
-  return new IteratorReader(exportItems(collection), {objectMode: false});
+function collectionToYamlExportStream(collection, yamlOptions) {
+  return new IteratorReader(exportItems(collection, yamlOptions), {objectMode: false});
 }
 
-function *exportItems(collection) {
+function *exportItems(collection, yamlOptions) {
+  yamlOptions = Object.assign({}, YAML_EXPORT_OPTIONS, yamlOptions);
   var proxy, item, obj;
   for(proxy of collection.values()) {
     item = proxy[this$];
@@ -129,13 +134,17 @@ function *exportItems(collection) {
       console.error(e);
       continue;
     }
-    let str = yaml.dump(obj, YAML_EXPORT_OPTIONS);
+    let str = yaml.dump(obj, yamlOptions);
     yield '---\n' + str;
   }
 }
 
 
-function importDbFromYaml(db, dataPath, merge, reporter) {
+function importDbFromYaml(db, dataPath, merge, reporter, updateChunkSize) {
+  if ('number' === typeof reporter) {
+    updateChunkSize = reporter, reporter = undefined;
+  }
+
   return verifyMetaVersion(db, dataPath)
   .then(() => {
     var success = 0;
@@ -151,7 +160,7 @@ function importDbFromYaml(db, dataPath, merge, reporter) {
           , name = collection.name
           , collPath = makeCollPath(dataPath, name);
 
-      return importCollectionFromYaml(collection, collPath, merge)
+      return importCollectionFromYaml(collection, collPath, merge, updateChunkSize)
       .then(count => {
         ++success;
         if (reporter) reporter("Imported collection: %j items: %s", name, count);
@@ -181,11 +190,14 @@ function verifyMetaVersion(db, dataPath) {
   .then(meta => db.pushVersionMark(meta.version));
 }
 
-function importCollectionFromYaml(collection, collPath, merge) {
+function importCollectionFromYaml(collection, collPath, merge, updateChunkSize) {
+  var readStreamOptions = {encoding: 'utf8', highWaterMark: 131027};
+  if (updateChunkSize !== undefined) readStreamOptions.highWaterMark = updateChunkSize;
+
   return new Promise((resolve, reject) => {
     collection.db.begin();
     if (!merge) collection.deleteAll();
-    const reader = createReadStream(collPath, {encoding: 'utf8', highWaterMark: 131027});
+    const reader = createReadStream(collPath, readStreamOptions);
     const error = err => {
       reader.close();
       reject(err);
