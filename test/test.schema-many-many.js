@@ -15,7 +15,7 @@ const Primitive = require('../lib/collection/schema/types').primitive;
 test("DB", suite => {
 
   suite.test("should create database with many to many relations", t => {
-    t.plan(165);
+    t.plan(211);
     var schema = {
       foos: {
         name: {type: "string", required: true},
@@ -274,13 +274,102 @@ test("DB", suite => {
       .then(bar => {
         t.type(bar, Item);
         t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 11+7-15, foos: [fooid]});
-          var foo = db.collections.foos[fooid];
+        var foo = db.collections.foos[fooid];
         t.deepEqual(JSON.parse(JSON.stringify(foo)), {_id: fooid, name: "meow kitty", bars: [barid]});
         t.strictEqual(bar.foos[0], foo);
         t.strictEqual(foo.bars[0], bar);
         t.strictEqual(db.collections.bars[barid], bar);
         t.strictEqual(db.collections.bars.size, 2);
         t.strictEqual(db.collections.foos.size, 1);
+
+        return db.collections.bars.deleteAllAndSave();
+      })
+      .then(result => {
+        t.strictEqual(result, true);
+        t.strictEqual(db.collections.bars.size, 0);
+        t.strictEqual(db.collections.foos.size, 1);
+        var foo = db.collections.foos[fooid];
+        t.strictEqual(foo.bars.size, 0);
+        db.collections.foos.deleteAll();
+        var foos = [
+          db.collections.foos.create({name: "foo", value: 1}),
+          db.collections.foos.create({name: "bar", value: 2}),
+          db.collections.foos.create({name: "baz", value: 3}),
+        ];
+        db.collections.bars.create({counter: 1, foos: foos});
+        db.collections.bars.create({counter: 2, foos: foos});
+        barid = db.collections.bars.create({counter: 3, foos: foos});
+        return db.save();
+      })
+      .then(bar => {
+        t.type(bar, Item);
+        t.strictEqual(db.collections.bars.size, 3);
+        t.strictEqual(db.collections.foos.size, 3);
+        var foos = db.collections.foos.map(foo => foo._id).all();
+        var bars = db.collections.bars.all();
+        t.strictEqual(bar, db.collections.bars[2]);
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: barid, counter: 3, foos: foos});
+        bar = db.collections.bars[0];
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: bar._id, counter: 1, foos: foos});
+        bar = db.collections.bars[1];
+        t.deepEqual(JSON.parse(JSON.stringify(bar)), {_id: bar._id, counter: 2, foos: foos});
+        var foo = db.collections.foos[2];
+        t.strictEqual(foo.name, "baz");
+        t.strictEqual(foo.value, 3);
+        t.strictSame(foo.bars.ary, bars);
+        foo = db.collections.foos[1];
+        t.strictEqual(foo.name, "bar");
+        t.strictEqual(foo.value, 2);
+        t.strictSame(foo.bars.ary, bars);
+        foo = db.collections.foos[0];
+        t.strictEqual(foo.name, "foo");
+        t.strictEqual(foo.value, 1);
+        t.strictSame(foo.bars.ary, bars);
+        foo.bars = bars.reverse();
+        return db.save();
+      })
+      .then(foo => {
+        t.type(foo, Item);
+        t.strictEqual(foo.name, "foo");
+        t.strictEqual(foo.value, 1);
+        t.strictEqual(foo.bars.size, 3);
+        var bars = db.collections.bars.all().reverse();
+        var foos = db.collections.foos.all();
+        t.strictSame(foo.bars.ary, bars);
+        t.strictSame(db.collections.bars[0].foos.ary, foos);
+        t.strictSame(db.collections.bars[1].foos.ary, foos);
+        t.strictSame(db.collections.bars[2].foos.ary, foos);
+        foo.bars = [db.collections.bars[0], db.collections.bars[1]];
+        foo.bars = [db.collections.bars[0], db.collections.bars[2], db.collections.bars[1]];
+        return db.save();
+      })
+      .then(foo => {
+        t.type(foo, Item);
+        var bars = [db.collections.bars[0], db.collections.bars[2], db.collections.bars[1]];
+        var foos = db.collections.foos.all();
+        t.strictEqual(foo.name, "foo");
+        t.strictEqual(foo.value, 1);
+        t.strictEqual(foo.bars.size, 3);
+        t.strictSame(foo.bars.ary, bars);
+        t.strictSame(db.collections.bars[0].foos.ary, foos);
+        t.strictSame(db.collections.bars[1].foos.ary, foos);
+        t.strictSame(db.collections.bars[2].foos.ary, [db.collections.foos[1], db.collections.foos[2], db.collections.foos[0]]);
+        db.collections.foos[1].bars = undefined;
+        db.collections.foos[2].bars = [];
+        delete db.collections.foos[0].bars;
+        return db.save();
+      })
+      .then(foo => {
+        t.type(foo, Item);
+        t.strictEqual(foo.name, "foo");
+        t.strictEqual(foo.value, 1);
+        t.strictEqual(foo.bars.size, 0);
+        t.strictSame(db.collections.bars[0].foos.size, 0);
+        t.strictSame(db.collections.bars[1].foos.size, 0);
+        t.strictSame(db.collections.bars[2].foos.size, 0);
+        t.strictSame(db.collections.foos[0].bars.size, 0);
+        t.strictSame(db.collections.foos[1].bars.size, 0);
+        t.strictSame(db.collections.foos[2].bars.size, 0);
       });
     }).catch(t.threw);
 
