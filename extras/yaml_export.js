@@ -11,8 +11,11 @@ const mkdirp = require('mkdirp');
 
 const yaml = require('js-yaml');
 
+const create = Object.create;
+
 const IteratorReader = require('./iterator_reader');
 const dbCollectionCreateStream = require('./db_collection_create_stream');
+const dbUpdateStream = require('./db_update_stream');
 
 const { exportSym: export$
       , thisSym: this$
@@ -147,10 +150,11 @@ function importDbFromYaml(db, dataPath, merge, reporter, updateChunkSize) {
 
   return verifyMetaVersion(db, dataPath)
   .then(() => {
-    var success = 0;
+    var mode = 1
+      , names = Object.keys(db.collections)
+      , numCollections = names.length;
 
-    const names = Object.keys(db.collections);
-    if (names.length === 0) {
+    if (numCollections === 0) {
       if (reporter) reporter("No collections to import");
       return Promise.resolve(0);
     }
@@ -160,10 +164,16 @@ function importDbFromYaml(db, dataPath, merge, reporter, updateChunkSize) {
           , name = collection.name
           , collPath = makeCollPath(dataPath, name);
 
-      return importCollectionFromYaml(collection, collPath, merge, updateChunkSize)
+      return importCollectionFromYaml(collection, collPath, merge, updateChunkSize, mode)
       .then(count => {
-        ++success;
-        if (reporter) reporter("Imported collection: %j items: %s", name, count);
+        if (reporter) {
+          if (mode == 1) {
+            reporter("Imported collection: %j items: %s", name, count);
+          }
+          else {
+            reporter("Imported references of collection: %j items: %s", name, count);
+          }
+        }
       },
       err => {
         if (err.code === 'ENOENT') {
@@ -172,11 +182,17 @@ function importDbFromYaml(db, dataPath, merge, reporter, updateChunkSize) {
         else throw err;
       })
       .then(() => {
-        if (names.length !== 0) return next();
+        if (names.length !== 0) {
+          return next();
+        }
+        else if (mode == 1) {
+          mode = 2, names = Object.keys(db.collections);
+          return next();
+        }
       });
     }
 
-    return next().then(() => success);
+    return next().then(() => numCollections);
   });
 }
 
@@ -190,25 +206,92 @@ function verifyMetaVersion(db, dataPath) {
   .then(meta => db.pushVersionMark(meta.version));
 }
 
-function importCollectionFromYaml(collection, collPath, merge, updateChunkSize) {
-  var readStreamOptions = {encoding: 'utf8', highWaterMark: 131027};
+/* mode may be:
+   1 - strips has many reference properties
+   2 - updates only has many reference properties
+   else - creates full objects
+*/
+function importCollectionFromYaml(collection, collPath, merge, updateChunkSize, mode) {
+  const readStreamOptions = {encoding: 'utf8', highWaterMark: 131027};
   if (updateChunkSize !== undefined) readStreamOptions.highWaterMark = updateChunkSize;
 
   return new Promise((resolve, reject) => {
+    const hasManyStripTransform = mode == 1 ? maybeCreateStripHasManyPropertiesTransform(collection)
+                                            : undefined;
+    const writer = mode == 2 ? maybeCreateDbCollectionUpdateHasManyStream(collection)
+                             : dbCollectionCreateStream(collection);
+
+    if (writer === undefined) return resolve(0);
+
     collection.db.begin();
-    if (!merge) collection.deleteAll();
+
+    if (mode != 2 && !merge) collection.deleteAll();
+
     const reader = createReadStream(collPath, readStreamOptions);
     const error = err => {
       reader.close();
       reject(err);
     };
-    reader
+    var transform = reader
     .on('error', error)
     .pipe(createYamlToObjTransform(yamlImportOptions(collPath)))
-    .on('error', error)
-    .pipe(dbCollectionCreateStream(collection))
+    .on('error', error);
+    if (hasManyStripTransform !== undefined) {
+      transform = transform.pipe(hasManyStripTransform)
+                           .on('error', error);
+    }
+    transform
+    .pipe(writer)
     .on('error', error)
     .on('data', resolve);
+  });
+}
+
+function getHasManyPropertyNames(collection) {
+  return Array.from(collection[Symbol.for("schema")][Symbol.for("hasManyDescriptorsIterate")]())
+              .map(({name}) => name);
+}
+
+function maybeCreateStripHasManyPropertiesTransform(collection) {
+  const names = getHasManyPropertyNames(collection)
+      , len = names.length;
+
+  if (len === 0) return;
+
+  return new Transform({
+    objectMode: true,
+    transform(obj, enc, callback) {
+      var i = len;
+      try {
+        while(--i >= 0) delete obj[names[i]];
+      } catch(err) {
+        return callback(err);
+      }
+      callback(null, obj);
+    }
+  });
+}
+
+function maybeCreateDbCollectionUpdateHasManyStream(collection) {
+  const names = getHasManyPropertyNames(collection)
+      , len = names.length;
+
+  if (len === 0) return;
+
+  return dbUpdateStream(collection.db, {
+    updater(obj) {
+      var res = create(null)
+        , i = len
+        , value
+        , name;
+
+      while(--i >= 0) {
+        name = names[i];
+        value = obj[name];
+        if (value !== undefined) res[name] = value;
+      }
+      collection.update(obj._id, res);
+    }
   });
 }
 
