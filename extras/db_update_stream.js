@@ -63,11 +63,11 @@ module.exports = function dbUpdateStream(db, options) {
       if (wantFlush) {
         wantFlush = false;
         flusher = undefined;
-        if (db._flush()) {
-          callback();
+        if (db._flush() === false) {
+          db.once('writable', callback);
         }
         else {
-          db.once('writable', callback);
+          callback();
         }
       }
       else {
