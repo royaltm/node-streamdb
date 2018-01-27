@@ -8,7 +8,7 @@ const { iterateReferences, getReferencedCollection } = require('../lib/collectio
 test("DB", suite => {
 
   suite.test('should export all collections', t => {
-    t.plan(111);
+    t.plan(112);
     var db = new DB({schema: {
       groups: {
         name: {type: String, unique: true, required: true}
@@ -275,15 +275,19 @@ test("DB", suite => {
       t.deepEquals(object, {"_id":"000000000000000000001000","roles":["000000000000000000000006","000000000000000000000003","000000000000000000000004"],"lastName":"Kowalski","firstName":"Dżon","email":"dzon@badasses.me"});
       object = Item.toObject(user, 0, {login: false, roles: false});
       t.deepEquals(object, {"_id":"000000000000000000001000","lastName":"Kowalski","firstName":"Dżon","email":"dzon@badasses.me"});
-      object = Item.toObject(user, 1, {login: false, users: false});
+      object = Item.toObject(user, 1, {login: false, ["*"]: {users: false}});
       t.deepEquals(object, {"_id":"000000000000000000001000","roles":[{"_id":"000000000000000000000006","role":"owner","group":"000000000000000000000002"},{"_id":"000000000000000000000003","role":"owner","group":"000000000000000000000001"},{"_id":"000000000000000000000004","role":"admin","group":"000000000000000000000001"}],"lastName":"Kowalski","firstName":"Dżon","email":"dzon@badasses.me"});
-      object = Item.toObject(user, 10, {login: false, users: false});
+      object = Item.toObject(user, Number.POSITIVE_INFINITY, {login: false, roles: {[""]: 0, users: false}});
+      t.deepEquals(object, {"_id":"000000000000000000001000","roles":[{"_id":"000000000000000000000006","role":"owner","group":"000000000000000000000002"},{"_id":"000000000000000000000003","role":"owner","group":"000000000000000000000001"},{"_id":"000000000000000000000004","role":"admin","group":"000000000000000000000001"}],"lastName":"Kowalski","firstName":"Dżon","email":"dzon@badasses.me"});
+      let wildcards = {users: false};
+      wildcards['*'] = wildcards;
+      object = Item.toObject(user, 10, {login: false, ["*"]: wildcards});
       t.deepEquals(object, {"_id":"000000000000000000001000","roles":[{"_id":"000000000000000000000006","role":"owner","group":{"_id":"000000000000000000000002","name":"Wimps","roles":["000000000000000000000006",{"_id":"000000000000000000000007","role":"admin","group":"000000000000000000000002"},{"_id":"000000000000000000000008","role":"guest","group":"000000000000000000000002"}]}},{"_id":"000000000000000000000003","role":"owner","group":{"_id":"000000000000000000000001","name":"Badasses","roles":["000000000000000000000003",{"_id":"000000000000000000000004","role":"admin","group":"000000000000000000000001"},{"_id":"000000000000000000000005","role":"guest","group":"000000000000000000000001"}]}},{"_id":"000000000000000000000004","role":"admin","group":{"_id":"000000000000000000000001","name":"Badasses","roles":[{"_id":"000000000000000000000003","role":"owner","group":"000000000000000000000001"},"000000000000000000000004",{"_id":"000000000000000000000005","role":"guest","group":"000000000000000000000001"}]}}],"lastName":"Kowalski","firstName":"Dżon","email":"dzon@badasses.me"});
 
       t.deepEquals(Item.toObject([user], -1), [user._id]);
       t.deepEquals(Item.toObject([user], 0), [user.toJSON()]);
       t.deepEquals(Item.toObject([user], 1), [{"_id":"000000000000000000001000","roles":[{"_id":"000000000000000000000006","role":"owner","group":"000000000000000000000002","users":["000000000000000000001000"]},{"_id":"000000000000000000000003","role":"owner","group":"000000000000000000000001","users":["000000000000000000001000"]},{"_id":"000000000000000000000004","role":"admin","group":"000000000000000000000001","users":["000000000000000000001000","000000000000000000001001","000000000000000000001002"]}],"login":"Badass Numer Uno","lastName":"Kowalski","firstName":"Dżon","email":"dzon@badasses.me"}]);
-      object = Item.toObject(['', user, 42], 10, {login: false, users: false});
+      object = Item.toObject(['', user, 42], 10, {login: false, ["*"]: wildcards});
       t.deepEquals(object, ['',{"_id":"000000000000000000001000","roles":[{"_id":"000000000000000000000006","role":"owner","group":{"_id":"000000000000000000000002","name":"Wimps","roles":["000000000000000000000006",{"_id":"000000000000000000000007","role":"admin","group":"000000000000000000000002"},{"_id":"000000000000000000000008","role":"guest","group":"000000000000000000000002"}]}},{"_id":"000000000000000000000003","role":"owner","group":{"_id":"000000000000000000000001","name":"Badasses","roles":["000000000000000000000003",{"_id":"000000000000000000000004","role":"admin","group":"000000000000000000000001"},{"_id":"000000000000000000000005","role":"guest","group":"000000000000000000000001"}]}},{"_id":"000000000000000000000004","role":"admin","group":{"_id":"000000000000000000000001","name":"Badasses","roles":[{"_id":"000000000000000000000003","role":"owner","group":"000000000000000000000001"},"000000000000000000000004",{"_id":"000000000000000000000005","role":"guest","group":"000000000000000000000001"}]}}],"lastName":"Kowalski","firstName":"Dżon","email":"dzon@badasses.me"}, 42]);
       object = Item.toObject([user, [role, group], 42], 0);
       t.deepEquals(object, [user.toJSON(), [role.toJSON(), group.toJSON()], 42]);
