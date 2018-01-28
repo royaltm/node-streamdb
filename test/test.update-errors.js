@@ -12,6 +12,35 @@ const { UniqueConstraintViolationError } = require('../lib/errors');
 
 test("update errors", suite => {
 
+  suite.test('property errors', t => {
+    t.plan(9);
+    var db = new DB({schema: {
+      foos: {
+        bar: {hasOne: {collection: "bars", hasMany: "foos"}}
+      },
+      bars: {
+        name: String
+      }
+    }});
+
+    db.stream.pipe(db.stream);
+    return db.writable.then(db => {
+      return db.collections.foos.createAndSave({bar: db.collections.bars.create({name: 'bar1'})});
+    })
+    .then(foo => {
+      t.type(foo, Item);
+      t.type(foo.bar, Item);
+      t.strictEqual(db.collections.foos.size, 1);
+      t.strictEqual(db.collections.bars.size, 1);
+
+      t.throw(() => db.collections.foos.update(foo, new Date()), new TypeError("update: value must be a plain object"));
+      t.throw(() => db.collections.foos.update(foo, {__xxx: 1}), new TypeError('foos: property name must not start with a "__": __xxx'));
+      t.throw(() => db.collections.foos.update(foo, {_id: -1}), new TypeError("foos: reserved property name: _id"));
+      t.throw(() => db.collections.foos.update(foo, {"bar.name": 42}), new TypeError('foos: deep property "bar.name" is cross-reference'));
+      t.throw(() => db.collections.bars.update(foo.bar, {"foos.length": 0}), new TypeError('bars: deep property "foos.length" is cross-reference'));
+    }).catch(t.threw);
+  });
+
   suite.test('unique errors', t => {
     t.plan(132);
     var db = new DB({schema: {
