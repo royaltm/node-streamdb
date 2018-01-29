@@ -5,9 +5,10 @@ const { PassThrough } =require('stream');
 const DB = require('../lib');
 const Item = require('../lib/collection/item').Item;
 const Collection = require('../lib/collection').Collection;
-const {genIdent, Ident} = require('../lib/id');
+const {genIdent, isIdent, Ident} = require('../lib/id');
 const errors = require('../lib/errors');
 const { VersionError } = errors;
+const util = require('../lib/util');
 const itertools = require('../lib/iter');
 const schemaUtils = require('../lib/collection/schema/utils');
 
@@ -34,6 +35,8 @@ test("DB", suite => {
     t.strictEqual(DB.UniqueConstraintViolationError, errors.UniqueConstraintViolationError);
     t.strictEqual(DB.Ident, Ident);
     t.strictEqual(DB.uniqueId, genIdent);
+    t.strictEqual(DB.isIdString, isIdent);
+    t.strictEqual(DB.util, util);
     t.end();
   });
 
