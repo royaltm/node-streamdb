@@ -16,7 +16,7 @@ const Blob = require('../lib/collection/schema/types').blob;
 test("DB", suite => {
 
   suite.test("should create database with type constraint schema", t => {
-    t.plan(26+123+2);
+    t.plan(32+123+2);
     var db = new DB({schema: {
       test: {
         name: String,
@@ -35,7 +35,6 @@ test("DB", suite => {
         'other.nested.flag': {type: 'Boolean', required: true}
       }
     });
-
     t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')]),
       ['name', 'time', 'other', 'other.nested', 'other.nested.count', 'other.nested.flag']);
     t.strictSame(db.collections.test[Symbol.for('schema')].name, {
@@ -60,46 +59,51 @@ test("DB", suite => {
       type: Number,
       prop: 'other.nested.count'
     });
-    t.deepEqual(db.collections.test[Symbol.for('schema')].other, {
-      nested:
-        { count:
-            { name: 'other.nested.count',
-              required: false,
-              type: Number,
-              prop: 'count' },
-          flag:
-            { name: 'other.nested.flag',
-              required: true,
-              type: Boolean,
-              prop: 'flag' } },
-      'nested.count':
-      { name: 'other.nested.count',
-        required: false,
-        type: Number,
-        prop: 'nested.count' },
-      'nested.flag':
-        { name: 'other.nested.flag',
-          required: true,
-          type: Boolean,
-          prop: 'nested.flag' }
-    });
-    t.deepEqual(db.collections.test[Symbol.for('schema')]['other.nested'], {
-      count:
-      { name: 'other.nested.count',
-        required: false,
-        type: Number,
-        prop: 'count' },
-      flag:
-      { name: 'other.nested.flag',
-        required: true,
-        type: Boolean,
-        prop: 'flag' }
-    });
     t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested.flag'], {
       name: 'other.nested.flag',
       required: true,
       type: Boolean,
       prop: 'other.nested.flag'
+    });
+    t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested'].count, {
+      name: 'other.nested.count',
+      required: false,
+      type: Number,
+      prop: 'count'
+    });
+    t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested'].flag, {
+      name: 'other.nested.flag',
+      required: true,
+      type: Boolean,
+      prop: 'flag'
+    });
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].other.nested),
+                ["count", "flag"]);
+    t.strictSame(db.collections.test[Symbol.for('schema')].other.nested.count, {
+      name: 'other.nested.count',
+      required: false,
+      type: Number,
+      prop: 'count'
+    });
+    t.strictSame(db.collections.test[Symbol.for('schema')].other.nested.flag, {
+      name: 'other.nested.flag',
+      required: true,
+      type: Boolean,
+      prop: 'flag'
+    }),
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].other),
+                ["nested", "nested.count", "nested.flag"]);
+    t.strictSame(db.collections.test[Symbol.for('schema')].other['nested.count'], {
+      name: 'other.nested.count',
+      required: false,
+      type: Number,
+      prop: 'nested.count'
+    });
+    t.strictSame(db.collections.test[Symbol.for('schema')].other['nested.flag'], {
+      name: 'other.nested.flag',
+      required: true,
+      type: Boolean,
+      prop: 'nested.flag'
     });
 
     db.stream.pipe(db.stream);
@@ -259,7 +263,7 @@ test("DB", suite => {
   });
 
   suite.test("should create database with default constraint schema", t => {
-    t.plan(108);
+    t.plan(115);
     var schema = {
       test: {
         name: {type: "string", default: "foo"},
@@ -325,54 +329,6 @@ test("DB", suite => {
       "required": true,
       "type": new Primitive()
     });
-    t.deepEqual(db.collections.test[Symbol.for('schema')].other, {
-      "nested": {
-        "count": {
-          "default": 10,
-          "name": "other.nested.count",
-          "prop": "count",
-          "required": false,
-          "type": Number,
-        },
-        "flag": {
-          "default": true,
-          "name": "other.nested.flag",
-          "prop": "flag",
-          "required": false,
-          "type": Boolean,
-        }
-      },
-      "nested.count": {
-        "default": 10,
-        "name": "other.nested.count",
-        "prop": "nested.count",
-        "required": false,
-        "type": Number,
-      },
-      "nested.flag": {
-        "default": true,
-        "name": "other.nested.flag",
-        "prop": "nested.flag",
-        "required": false,
-        "type": Boolean,
-      }
-    });
-    t.deepEqual(db.collections.test[Symbol.for('schema')]['other.nested'], {
-      "count": {
-        "default": 10,
-        "name": "other.nested.count",
-        "prop": "count",
-        "required": false,
-        "type": Number,
-      },
-      "flag": {
-        "default": true,
-        "name": "other.nested.flag",
-        "prop": "flag",
-        "required": false,
-        "type": Boolean,
-      },
-    });
     t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested.count'], {
       "default": 10,
       "name": "other.nested.count",
@@ -384,6 +340,54 @@ test("DB", suite => {
       "default": true,
       "name": "other.nested.flag",
       "prop": "other.nested.flag",
+      "required": false,
+      "type": Boolean,
+    });
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')]['other.nested']),
+                ["count", "flag"]);
+    t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested'].count, {
+      "default": 10,
+      "name": "other.nested.count",
+      "prop": "count",
+      "required": false,
+      "type": Number,
+    });
+    t.strictSame(db.collections.test[Symbol.for('schema')]['other.nested'].flag, {
+      "default": true,
+      "name": "other.nested.flag",
+      "prop": "flag",
+      "required": false,
+      "type": Boolean,
+    });
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].other.nested),
+                ["count", "flag"]);
+    t.strictSame(db.collections.test[Symbol.for('schema')].other.nested.count, {
+      "default": 10,
+      "name": "other.nested.count",
+      "prop": "count",
+      "required": false,
+      "type": Number,
+    });
+    t.strictSame(db.collections.test[Symbol.for('schema')].other.nested.flag, {
+      "default": true,
+      "name": "other.nested.flag",
+      "prop": "flag",
+      "required": false,
+      "type": Boolean,
+    });
+    t.strictSame(Object.getOwnPropertyNames(db.collections.test[Symbol.for('schema')].other),
+                ["nested", "nested.count", "nested.flag"]);
+    t.strictSame(db.collections.test[Symbol.for('schema')].other["nested.count"], {
+      "default": 10,
+      "name": "other.nested.count",
+      "prop": "nested.count",
+      "required": false,
+      "type": Number,
+    });
+    t.strictSame(db.collections.test[Symbol.for('schema')].other["nested.flag"], {
+      "default": true,
+      "name": "other.nested.flag",
+      "prop": "nested.flag",
       "required": false,
       "type": Boolean,
     });

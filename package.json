@@ -5,7 +5,7 @@
   "description": "log based in-memory document database",
   "main": "lib/index.js",
   "scripts": {
-    "test": "tap -C -Rclassic --strict test/test.*.js",
+    "test": "tap --strict test/test.*.js",
     "cli": "node bin/console.js"
   },
   "author": "Rafał Michalski <royal@yeondir.com>",
@@ -17,10 +17,10 @@
   "dependencies": {},
   "devDependencies": {
     "ben": "0.0.0",
-    "colors": "^1.1.2",
-    "js-yaml": "^3.10.0",
+    "colors": "^1.4.0",
+    "js-yaml": "^3.13.1",
     "mkdirp": "^0.5.1",
     "msgpack-lite": "^0.1.26",
-    "tap": "^5.8.0"
+    "tap": "^14.6.5"
   }
 }
