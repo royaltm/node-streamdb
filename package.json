@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git://github.com/royaltm/node-streamdb.git"
   },
-  "license": "UNLICENSED",
+  "license": "LGPL-3.0",
   "dependencies": {},
   "devDependencies": {
     "ben": "0.0.0",
